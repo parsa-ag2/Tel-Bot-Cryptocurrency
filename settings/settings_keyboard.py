@@ -1,5 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
+from telegram import ReplyKeyboardMarkup
 
 
 # =========================
@@ -10,42 +9,17 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 def settings_keyboard():
 
     keyboard = [
-
-        [
-            InlineKeyboardButton(
-                "👥 مدیریت ادمین‌ها",
-                callback_data="admin_panel"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "📢 کانال‌های اجباری",
-                callback_data="channel_panel"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "🔔 تنظیمات هشدار قیمت",
-                callback_data="alert_settings"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "🔙 بازگشت",
-                callback_data="back"
-            )
-        ]
-
+        ["👥 مدیریت ادمین‌ها"],
+        ["📢 کانال‌های اجباری"],
+        ["🔔 تنظیمات هشدار قیمت"],
+        ["🔙 بازگشت"],
     ]
 
-
-    return InlineKeyboardMarkup(
-        keyboard
+    return ReplyKeyboardMarkup(
+        keyboard,
+        resize_keyboard=True,
+        is_persistent=True,
     )
-
 
 
 # =========================
@@ -56,42 +30,17 @@ def settings_keyboard():
 def admin_keyboard():
 
     keyboard = [
-
-        [
-            InlineKeyboardButton(
-                "➕ اضافه کردن ادمین",
-                callback_data="add_admin"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "➖ حذف ادمین",
-                callback_data="remove_admin"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "📋 لیست ادمین‌ها",
-                callback_data="list_admins"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "🔙 بازگشت",
-                callback_data="settings"
-            )
-        ]
-
+        ["➕ اضافه کردن ادمین"],
+        ["➖ حذف ادمین"],
+        ["📋 لیست ادمین‌ها"],
+        ["🔙 بازگشت"],
     ]
 
-
-    return InlineKeyboardMarkup(
-        keyboard
+    return ReplyKeyboardMarkup(
+        keyboard,
+        resize_keyboard=True,
+        is_persistent=True,
     )
-
 
 
 # =========================
@@ -102,49 +51,18 @@ def admin_keyboard():
 def channel_keyboard():
 
     keyboard = [
-
-        [
-            InlineKeyboardButton(
-                "➕ افزودن کانال",
-                callback_data="add_channel"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "➖ حذف کانال",
-                callback_data="remove_channel"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "📋 لیست کانال‌ها",
-                callback_data="list_channels"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "🔄 تست اتصال",
-                callback_data="test_channel"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "🔙 بازگشت",
-                callback_data="settings"
-            )
-        ]
-
+        ["➕ افزودن کانال"],
+        ["➖ حذف کانال"],
+        ["📋 لیست کانال‌ها"],
+        ["🔄 تست اتصال"],
+        ["🔙 بازگشت"],
     ]
 
-
-    return InlineKeyboardMarkup(
-        keyboard
+    return ReplyKeyboardMarkup(
+        keyboard,
+        resize_keyboard=True,
+        is_persistent=True,
     )
-
 
 
 # =========================
@@ -155,31 +73,13 @@ def channel_keyboard():
 def alert_keyboard():
 
     keyboard = [
-
-        [
-            InlineKeyboardButton(
-                "✅ فعال کردن هشدار",
-                callback_data="enable_alert"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "❌ غیرفعال کردن هشدار",
-                callback_data="disable_alert"
-            )
-        ],
-
-        [
-            InlineKeyboardButton(
-                "🔙 بازگشت",
-                callback_data="settings"
-            )
-        ]
-
+        ["✅ فعال کردن هشدار"],
+        ["❌ غیرفعال کردن هشدار"],
+        ["🔙 بازگشت"],
     ]
 
-
-    return InlineKeyboardMarkup(
-        keyboard
+    return ReplyKeyboardMarkup(
+        keyboard,
+        resize_keyboard=True,
+        is_persistent=True,
     )

@@ -1,7 +1,6 @@
 from telegram import Update
 from telegram.ext import (
     ContextTypes,
-    CallbackQueryHandler,
     ConversationHandler,
     MessageHandler,
     filters
@@ -11,11 +10,14 @@ from settings.admin_manager import (
     add_admin,
     remove_admin,
     get_admins,
+    is_admin
 )
 
 from settings.settings_keyboard import (
     settings_keyboard,
     admin_keyboard,
+    channel_keyboard,
+    alert_keyboard
 )
 
 
@@ -29,8 +31,7 @@ REMOVE_ADMIN_ID = 2
 
 
 # =========================
-# Open Settings Panel
-# باز کردن پنل تنظیمات
+# Open Settings
 # =========================
 
 async def open_settings(
@@ -38,20 +39,26 @@ async def open_settings(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    query = update.callback_query
+    if not is_admin(
+        update.effective_user.id
+    ):
 
-    await query.answer()
+        await update.message.reply_text(
+            "❌ شما دسترسی ورود به تنظیمات را ندارید"
+        )
 
-    await query.edit_message_text(
-        text="⚙️ تنظیمات ربات",
+        return
+
+
+    await update.message.reply_text(
+        "⚙️ پنل تنظیمات",
         reply_markup=settings_keyboard()
     )
 
 
 
 # =========================
-# Admin Management Menu
-# منوی مدیریت ادمین
+# Admin Panel
 # =========================
 
 async def admin_panel(
@@ -59,14 +66,41 @@ async def admin_panel(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    query = update.callback_query
-
-    await query.answer()
-
-
-    await query.edit_message_text(
-        text="👥 مدیریت ادمین‌ها",
+    await update.message.reply_text(
+        "👥 مدیریت ادمین‌ها",
         reply_markup=admin_keyboard()
+    )
+
+
+
+# =========================
+# Channel Panel
+# =========================
+
+async def channel_panel(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    await update.message.reply_text(
+        "📢 مدیریت کانال‌ها",
+        reply_markup=channel_keyboard()
+    )
+
+
+
+# =========================
+# Alert Panel
+# =========================
+
+async def alert_panel(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    await update.message.reply_text(
+        "🔔 تنظیمات هشدار قیمت",
+        reply_markup=alert_keyboard()
     )
 
 
@@ -80,15 +114,9 @@ async def add_admin_start(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    query = update.callback_query
-
-    await query.answer()
-
-
-    await query.message.reply_text(
+    await update.message.reply_text(
         "➕ آیدی عددی ادمین جدید را ارسال کنید:"
     )
-
 
     return ADD_ADMIN_ID
 
@@ -103,13 +131,11 @@ async def add_admin_save(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    telegram_id = update.message.text
-
-
     try:
 
-        telegram_id = int(telegram_id)
-
+        telegram_id = int(
+            update.message.text
+        )
 
     except ValueError:
 
@@ -130,13 +156,15 @@ async def add_admin_save(
     if result:
 
         await update.message.reply_text(
-            "✅ ادمین با موفقیت اضافه شد"
+            "✅ ادمین اضافه شد",
+            reply_markup=admin_keyboard()
         )
 
     else:
 
         await update.message.reply_text(
-            "⚠️ این کاربر قبلاً ادمین است"
+            "⚠️ این کاربر قبلاً ادمین است",
+            reply_markup=admin_keyboard()
         )
 
 
@@ -153,15 +181,9 @@ async def remove_admin_start(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    query = update.callback_query
-
-    await query.answer()
-
-
-    await query.message.reply_text(
-        "➖ آیدی ادمینی که می‌خواهید حذف کنید را بفرستید:"
+    await update.message.reply_text(
+        "➖ آیدی ادمینی که حذف شود را ارسال کنید:"
     )
-
 
     return REMOVE_ADMIN_ID
 
@@ -185,7 +207,7 @@ async def remove_admin_save(
     except ValueError:
 
         await update.message.reply_text(
-            "❌ آیدی نامعتبر است"
+            "❌ آیدی باید عدد باشد"
         )
 
         return REMOVE_ADMIN_ID
@@ -200,13 +222,15 @@ async def remove_admin_save(
     if result:
 
         await update.message.reply_text(
-            "✅ ادمین حذف شد"
+            "✅ ادمین حذف شد",
+            reply_markup=admin_keyboard()
         )
 
     else:
 
         await update.message.reply_text(
-            "⚠️ ادمین پیدا نشد"
+            "⚠️ ادمین پیدا نشد",
+            reply_markup=admin_keyboard()
         )
 
 
@@ -223,11 +247,6 @@ async def list_admins(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    query = update.callback_query
-
-    await query.answer()
-
-
     admins = get_admins()
 
 
@@ -241,22 +260,30 @@ async def list_admins(
 
         for admin in admins:
 
-            username = (
-                f"@{admin.username}"
-                if admin.username
-                else "بدون یوزرنیم"
-            )
-
-
             text += (
-                f"👤 {username}\n"
-                f"🆔 {admin.telegram_id}\n\n"
+                f"🆔 {admin.telegram_id}\n"
             )
 
 
-    await query.edit_message_text(
-        text=text,
+    await update.message.reply_text(
+        text,
         reply_markup=admin_keyboard()
+    )
+
+
+
+# =========================
+# Back To Settings
+# =========================
+
+async def back_settings(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    await update.message.reply_text(
+        "⚙️ پنل تنظیمات",
+        reply_markup=settings_keyboard()
     )
 
 
@@ -269,68 +296,91 @@ def settings_handlers():
 
     return [
 
-        CallbackQueryHandler(
-            open_settings,
-            pattern="settings"
+        # ورود به تنظیمات
+        MessageHandler(
+            filters.Regex("^⚙️ تنظیمات$"),
+            open_settings
         ),
 
 
-        CallbackQueryHandler(
-            admin_panel,
-            pattern="admin_panel"
+        # منوی ادمین
+        MessageHandler(
+            filters.Regex("^👥 مدیریت ادمین‌ها$"),
+            admin_panel
         ),
 
 
-        CallbackQueryHandler(
-            list_admins,
-            pattern="list_admins"
+        # منوی کانال
+        MessageHandler(
+            filters.Regex("^📢 کانال‌های اجباری$"),
+            channel_panel
+        ),
+
+
+        # منوی هشدار
+        MessageHandler(
+            filters.Regex("^🔔 تنظیمات هشدار قیمت$"),
+            alert_panel
+        ),
+
+
+        # اضافه کردن ادمین
+        MessageHandler(
+            filters.Regex("^➕ اضافه کردن ادمین$"),
+            add_admin_start
+        ),
+
+
+        # حذف ادمین
+        MessageHandler(
+            filters.Regex("^➖ حذف ادمین$"),
+            remove_admin_start
+        ),
+
+
+        # لیست ادمین
+        MessageHandler(
+            filters.Regex("^📋 لیست ادمین‌ها$"),
+            list_admins
+        ),
+
+
+        # بازگشت
+        MessageHandler(
+            filters.Regex("^🔙 بازگشت$"),
+            back_settings
         ),
 
 
         ConversationHandler(
 
-            entry_points=[
-                CallbackQueryHandler(
-                    add_admin_start,
-                    pattern="add_admin"
-                )
-            ],
+            entry_points=[],
 
             states={
 
-                ADD_ADMIN_ID:[
+                ADD_ADMIN_ID: [
+
                     MessageHandler(
-                        filters.TEXT,
+                        filters.TEXT & ~filters.COMMAND,
                         add_admin_save
                     )
-                ]
 
-            },
-
-            fallbacks=[]
-        ),
+                ],
 
 
-        ConversationHandler(
+                REMOVE_ADMIN_ID: [
 
-            entry_points=[
-                CallbackQueryHandler(
-                    remove_admin_start,
-                    pattern="remove_admin"
-                )
-            ],
-
-            states={
-
-                REMOVE_ADMIN_ID:[
                     MessageHandler(
-                        filters.TEXT,
+                        filters.TEXT & ~filters.COMMAND,
                         remove_admin_save
                     )
+
                 ]
 
             },
 
             fallbacks=[]
+
         )
+
     ]

@@ -3,8 +3,6 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
 from services.market import get_price, get_forex_price,get_commodity_price
-from settings.settings_keyboard import settings_keyboard
-from settings.admin_manager import is_admin
 from bot.keyboards import (
     home_keyboard,
     markets_keyboard,
@@ -12,6 +10,7 @@ from bot.keyboards import (
     forex_keyboard,
     commodities_keyboard
 )
+
 
 
 
@@ -201,30 +200,6 @@ async def text_handler(
             "کالای موردنظر را انتخاب کن 👇",
             reply_markup=commodities_keyboard()
         )
-
-
-    elif text == "⚙️ تنظیمات":
-
-
-        user_id = update.effective_user.id
-
-
-        if not is_admin(user_id):
-
-            await update.message.reply_text(
-                "❌ شما دسترسی ورود به تنظیمات را ندارید"
-            )
-
-            return
-
-
-        await update.message.reply_text(
-            "⚙️ پنل تنظیمات",
-            reply_markup=settings_keyboard()
-        )
-
-        return
-
 
 
     elif text == "🔙 بازگشت":
