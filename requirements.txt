@@ -1,0 +1,8 @@
+python-telegram-bot==22.3
+requests==2.32.4
+
+SQLAlchemy==2.0.42
+PyMySQL==1.1.1
+
+python-dotenv==1.1.1
+cryptography==45.0.5
