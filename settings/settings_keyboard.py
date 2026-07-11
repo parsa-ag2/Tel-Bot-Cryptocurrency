@@ -11,7 +11,6 @@ def settings_keyboard():
     keyboard = [
         ["👥 مدیریت ادمین‌ها"],
         ["📢 کانال‌های اجباری"],
-        ["🔔 تنظیمات هشدار قیمت"],
         ["🔙 بازگشت"],
     ]
 
@@ -64,22 +63,3 @@ def channel_keyboard():
         is_persistent=True,
     )
 
-
-# =========================
-# Price Alert Settings
-# هشدار قیمت
-# =========================
-
-def alert_keyboard():
-
-    keyboard = [
-        ["✅ فعال کردن هشدار"],
-        ["❌ غیرفعال کردن هشدار"],
-        ["🔙 بازگشت"],
-    ]
-
-    return ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True,
-        is_persistent=True,
-    )

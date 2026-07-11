@@ -16,8 +16,7 @@ from settings.admin_manager import (
 from settings.settings_keyboard import (
     settings_keyboard,
     admin_keyboard,
-    channel_keyboard,
-    alert_keyboard
+    channel_keyboard
 )
 
 
@@ -86,23 +85,6 @@ async def channel_panel(
         "📢 مدیریت کانال‌ها",
         reply_markup=channel_keyboard()
     )
-
-
-
-# =========================
-# Alert Panel
-# =========================
-
-async def alert_panel(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
-
-    await update.message.reply_text(
-        "🔔 تنظیمات هشدار قیمت",
-        reply_markup=alert_keyboard()
-    )
-
 
 
 # =========================
@@ -316,28 +298,6 @@ def settings_handlers():
             channel_panel
         ),
 
-
-        # منوی هشدار
-        MessageHandler(
-            filters.Regex("^🔔 تنظیمات هشدار قیمت$"),
-            alert_panel
-        ),
-
-
-        # اضافه کردن ادمین
-        MessageHandler(
-            filters.Regex("^➕ اضافه کردن ادمین$"),
-            add_admin_start
-        ),
-
-
-        # حذف ادمین
-        MessageHandler(
-            filters.Regex("^➖ حذف ادمین$"),
-            remove_admin_start
-        ),
-
-
         # لیست ادمین
         MessageHandler(
             filters.Regex("^📋 لیست ادمین‌ها$"),
@@ -351,10 +311,22 @@ def settings_handlers():
             back_settings
         ),
 
-
         ConversationHandler(
 
-            entry_points=[],
+            entry_points=[
+
+                MessageHandler(
+                    filters.Regex("^➕ اضافه کردن ادمین$"),
+                    add_admin_start
+                ),
+
+                MessageHandler(
+                    filters.Regex("^➖ حذف ادمین$"),
+                    remove_admin_start
+                )
+
+            ],
+
 
             states={
 
@@ -379,8 +351,8 @@ def settings_handlers():
 
             },
 
+
             fallbacks=[]
 
-        )
-
+)
     ]

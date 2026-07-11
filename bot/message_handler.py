@@ -1,14 +1,22 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
+
 from services.market import (
     get_price,
     get_forex_price,
-    get_commodity_price
+    get_commodity_price,
+    get_usdt_toman
 )
+
 
 # اسم‌هایی که کاربر ممکنه بنویسه
 MARKET_WORDS = {
+
+    # دلار
+    "دلار": ("usd", "USD"),
+    "usd": ("usd", "USD"),
+
 
     # کریپتو
     "btc": ("crypto", "bitcoin"),
@@ -71,6 +79,7 @@ MARKET_WORDS = {
     "نفت wti": ("commodity", "WTI"),
 
     "مس": ("commodity", "COPPER"),
+
     "گاز": ("commodity", "NATGAS"),
     "گاز طبیعی": ("commodity", "NATGAS"),
 }
@@ -78,12 +87,13 @@ MARKET_WORDS = {
 
 
 async def market_message_handler(
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
 ):
-       
+
     if update.effective_chat.type == ChatType.PRIVATE:
         return
+
 
     text = update.message.text.lower().strip()
 
@@ -92,32 +102,92 @@ async def market_message_handler(
 
         if word in text.split() or text == word:
 
+
             market_type, symbol = data
 
 
-            # crypto
+
+            # =====================
+            # دلار
+            # =====================
+
+            if market_type == "usd":
+
+                usdt_toman = get_usdt_toman()
+
+
+                if usdt_toman:
+
+                    await update.message.reply_text(
+                        f"""
+💵 دلار آمریکا
+
+🇮🇷 قیمت:
+{usdt_toman:,.0f} تومان
+"""
+                    )
+
+                return
+
+
+
+            # =====================
+            # Crypto
+            # =====================
+
             if market_type == "crypto":
 
                 result = get_price(symbol)
 
+
                 if result:
+
+                    usd = result["usd"]
+                    change = result["change"]
+
+
+                    usdt_toman = get_usdt_toman()
+
+                    toman_text = ""
+
+
+                    if usdt_toman:
+
+                        toman_price = usd * usdt_toman
+
+                        toman_text = (
+                            f"\n🇮🇷 قیمت تقریبی تومان:\n"
+                            f"{toman_price:,.0f} تومان"
+                        )
+
 
                     await update.message.reply_text(
                         f"""
 🪙 {word.upper()}
 
+
 💵 قیمت:
-{result['usd']} $
+{usd:,.2f} $
+
+
+{toman_text}
+
 
 📊 تغییر 24h:
-{result['change']:.2f}%
+{change:.2f}%
 """
                     )
 
-            # forex
+
+
+            # =====================
+            # Forex
+            # =====================
+
             elif market_type == "forex":
 
                 result = get_forex_price(symbol)
+
 
                 if result:
 
@@ -125,19 +195,22 @@ async def market_message_handler(
                         f"""
 💱 {symbol}
 
+
 💵 قیمت:
 {result['price']}
-
-📊 تغییر:
-{result['change']}%
 """
                     )
 
 
-            # commodity
+
+            # =====================
+            # Commodity
+            # =====================
+
             elif market_type == "commodity":
 
                 result = get_commodity_price(symbol)
+
 
                 if result:
 
@@ -145,11 +218,9 @@ async def market_message_handler(
                         f"""
 📊 {word}
 
+
 💵 قیمت:
 {result['price']}
-
-📈 تغییر:
-{result['change']}%
 """
                     )
 

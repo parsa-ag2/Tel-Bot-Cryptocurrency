@@ -26,6 +26,49 @@ def get_price(coin_id):
         return None
 
 
+# ---------- تتر تومان والکس ----------
+
+def get_usdt_toman():
+
+    url = "https://api.wallex.ir/v1/markets"
+
+    try:
+
+        response = requests.get(
+            url,
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+
+        markets = data["result"]["symbols"]
+
+
+        usdt = markets.get("USDTTMN")
+
+
+        if not usdt:
+            return None
+
+
+        price = usdt["stats"]["lastPrice"]
+
+
+        return float(price)
+
+
+
+    except requests.exceptions.RequestException as e:
+
+        print(
+            "WALLEX ERROR:",
+            e
+        )
+
+        return None
 # ---------- فارکس ----------
 
 

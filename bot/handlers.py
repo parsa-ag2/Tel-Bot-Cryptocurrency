@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
-from services.market import get_price, get_forex_price,get_commodity_price
+from services.market import get_price, get_forex_price,get_commodity_price,get_usdt_toman
 from bot.keyboards import (
     home_keyboard,
     markets_keyboard,
@@ -78,16 +78,37 @@ async def send_price(update: Update, coin_id: str):
         await update.message.reply_text("❌ خطا در دریافت قیمت.")
         return
 
+
     usd = data["usd"]
     change = data["change"]
 
+
+    # دریافت قیمت تتر به تومان از نوبیتکس
+    usdt_toman = get_usdt_toman()
+
+    toman_text = ""
+
+    if usdt_toman:
+
+        toman_price = usd * usdt_toman
+
+        toman_text = (
+            f"\n🇮🇷 قیمت تقریبی تومان: "
+            f"<b>{toman_price:,.0f}</b> تومان"
+        )
+
+
     change_emoji = "📈" if change >= 0 else "📉"
+
 
     text = (
         f"{emoji} <b>{name}</b>\n\n"
-        f"💵 قیمت: <b>${usd:,.2f}</b>\n"
-        f"{change_emoji} تغییر ۲۴ ساعته: <b>{change:.2f}%</b>"
+        f"💵 قیمت دلار: <b>${usd:,.2f}</b>"
+        f"{toman_text}\n"
+        f"{change_emoji} تغییر ۲۴ ساعته: "
+        f"<b>{change:.2f}%</b>"
     )
+
 
     await update.message.reply_text(
         text,

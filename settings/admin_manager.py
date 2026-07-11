@@ -5,7 +5,6 @@ from config import OWNER_ID
 
 # =========================
 # Add Admin
-# اضافه کردن ادمین
 # =========================
 
 def add_admin(
@@ -26,7 +25,6 @@ def add_admin(
             .first()
         )
 
-
         if exists:
             return False
 
@@ -37,7 +35,6 @@ def add_admin(
             added_by=added_by
         )
 
-
         db.add(admin)
         db.commit()
 
@@ -47,6 +44,7 @@ def add_admin(
     except Exception as e:
 
         db.rollback()
+
         print(
             f"Add admin error: {e}"
         )
@@ -62,7 +60,6 @@ def add_admin(
 
 # =========================
 # Remove Admin
-# حذف ادمین
 # =========================
 
 def remove_admin(
@@ -87,7 +84,6 @@ def remove_admin(
 
 
         db.delete(admin)
-
         db.commit()
 
         return True
@@ -112,7 +108,6 @@ def remove_admin(
 
 # =========================
 # Get Admin List
-# لیست ادمین ها
 # =========================
 
 def get_admins():
@@ -121,12 +116,19 @@ def get_admins():
 
     try:
 
-        admins = (
+        return (
             db.query(Admin)
             .all()
         )
 
-        return admins
+
+    except Exception as e:
+
+        print(
+            f"Get admins error: {e}"
+        )
+
+        return []
 
 
     finally:
@@ -137,13 +139,22 @@ def get_admins():
 
 # =========================
 # Check Admin
-# بررسی ادمین بودن
 # =========================
 
-def is_admin(telegram_id: int):
+def is_admin(
+    telegram_id: int
+):
 
-    # مالک اصلی همیشه ادمین است
-    if telegram_id == OWNER_ID:
+    try:
+        owner = int(OWNER_ID)
+
+    except:
+
+        owner = OWNER_ID
+
+
+    # مالک اصلی همیشه دسترسی دارد
+    if telegram_id == owner:
         return True
 
 
@@ -159,7 +170,17 @@ def is_admin(telegram_id: int):
             .first()
         )
 
+
         return admin is not None
+
+
+    except Exception as e:
+
+        print(
+            f"Check admin error: {e}"
+        )
+
+        return False
 
 
     finally:
