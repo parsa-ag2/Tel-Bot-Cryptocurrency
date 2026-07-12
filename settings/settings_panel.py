@@ -1,4 +1,5 @@
 from telegram import Update
+from telegram.error import TelegramError
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -18,6 +19,11 @@ from settings.settings_keyboard import (
     admin_keyboard,
     channel_keyboard
 )
+from settings.channel_manager import (
+    add_channel,
+    remove_channel,
+    get_channels,
+)
 
 
 # =========================
@@ -26,6 +32,8 @@ from settings.settings_keyboard import (
 
 ADD_ADMIN_ID = 1
 REMOVE_ADMIN_ID = 2
+ADD_CHANNEL = 3
+REMOVE_CHANNEL = 4
 
 
 
@@ -85,7 +93,146 @@ async def channel_panel(
         "📢 مدیریت کانال‌ها",
         reply_markup=channel_keyboard()
     )
+# =========================
+# Add Channel Start
+# =========================
 
+async def add_channel_start(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    await update.message.reply_text(
+        "📢 لینک یا یوزرنیم کانال را ارسال کنید.\n\n"
+        "مثال:\n"
+        "@MyChannel\n"
+        "یا\n"
+        "https://t.me/MyChannel"
+    )
+
+    return ADD_CHANNEL
+
+
+# =========================
+# Add Channel Save
+# =========================
+
+async def add_channel_save(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    text = update.message.text.strip()
+
+    if text.startswith("https://t.me/"):
+        username = text.split("/")[-1]
+    elif text.startswith("@"):
+        username = text[1:]
+    else:
+        username = text
+
+    try:
+
+        chat = await context.bot.get_chat(f"@{username}")
+
+        result = add_channel(
+            channel_id=chat.id,
+            username=chat.username,
+            title=chat.title
+        )
+
+        if result:
+
+            await update.message.reply_text(
+                f"✅ کانال اضافه شد.\n\n"
+                f"📢 {chat.title}\n"
+                f"🆔 {chat.id}",
+                reply_markup=channel_keyboard()
+            )
+
+        else:
+
+            await update.message.reply_text(
+                "⚠️ این کانال قبلاً ثبت شده است.",
+                reply_markup=channel_keyboard()
+            )
+
+    except TelegramError:
+
+        await update.message.reply_text(
+            "❌ کانال پیدا نشد یا ربات عضو کانال نیست.",
+            reply_markup=channel_keyboard()
+        )
+
+    return ConversationHandler.END
+# =========================
+# Remove Channel Start
+# =========================
+
+async def remove_channel_start(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    await update.message.reply_text(
+        "➖ لینک یا یوزرنیم کانال را ارسال کنید.\n\n"
+        "مثال:\n"
+        "@MyChannel\n"
+        "یا\n"
+        "https://t.me/MyChannel"
+    )
+
+    return REMOVE_CHANNEL
+
+# =========================
+# Remove Channel Save
+# =========================
+
+async def remove_channel_save(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    text = update.message.text.strip()
+
+    # استخراج یوزرنیم از لینک یا @
+    if text.startswith("https://t.me/"):
+        username = text.split("/")[-1]
+    elif text.startswith("@"):
+        username = text[1:]
+    else:
+        username = text
+
+    try:
+
+        chat = await context.bot.get_chat(f"@{username}")
+
+    except TelegramError:
+
+        await update.message.reply_text(
+            "❌ کانال پیدا نشد یا ربات عضو کانال نیست.",
+            reply_markup=channel_keyboard()
+        )
+
+        return REMOVE_CHANNEL
+
+    result = remove_channel(chat.id)
+
+    if result:
+
+        await update.message.reply_text(
+            "✅ کانال با موفقیت حذف شد.",
+            reply_markup=channel_keyboard()
+        )
+
+    else:
+
+        await update.message.reply_text(
+            "⚠️ این کانال در لیست کانال‌های اجباری ثبت نشده است.",
+            reply_markup=channel_keyboard()
+        )
+
+    return ConversationHandler.END
 
 # =========================
 # Add Admin Start

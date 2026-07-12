@@ -1,5 +1,4 @@
 import logging
-
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -7,17 +6,13 @@ from telegram.ext import (
     ChatMemberHandler,
     filters
 )
-
-from telegram.constants import ChatType
-
+from telegram.ext import CallbackQueryHandler
+from bot.membership import check_membership_callback
 from config import BOT_TOKEN
-
 from database.db import init_db
-
 from bot.handlers import start, text_handler
 from bot.group_handler import bot_added
 from bot.message_handler import market_message_handler
-
 from settings.settings_panel import settings_handlers
 
 
@@ -106,19 +101,28 @@ def main():
     for handler in settings_handlers():
         app.add_handler(handler)
 
+    # =========================
+    # Membership Callback
+    # =========================
+
+    app.add_handler(
+        CallbackQueryHandler(
+            check_membership_callback,
+            pattern="^check_membership$"
+        )
+    )
 
     logger.info(
         "✅ Bot is running..."
     )
 
-
     app.run_polling(
         allowed_updates=[
             "message",
+            "callback_query",
             "my_chat_member"
         ]
-    )
-
+)
 
 if __name__ == "__main__":
     main()

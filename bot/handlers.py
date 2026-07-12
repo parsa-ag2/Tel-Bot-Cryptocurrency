@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
+from bot.membership import check_user_membership
 from telegram.constants import ChatType
 from services.market import get_price, get_forex_price,get_commodity_price,get_usdt_toman
 from bot.keyboards import (
@@ -166,6 +167,14 @@ async def send_commodity(update, symbol):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
+    allowed = await check_user_membership(
+        update,
+        context
+    )
+
+    if not allowed:
+        return
+    
     if update.effective_chat.type != ChatType.PRIVATE:
 
         await update.message.reply_text(
@@ -183,6 +192,14 @@ async def text_handler(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
 ):
+
+    allowed = await check_user_membership(
+        update,
+        context
+    )
+
+    if not allowed:
+        return
 
     if update.effective_chat.type != ChatType.PRIVATE:
         return
@@ -230,12 +247,6 @@ async def text_handler(
             reply_markup=home_keyboard(),
         )
 
-    elif text == "🔙 بازگشت":
-
-        await update.message.reply_text(
-            "منوی اصلی",
-            reply_markup=home_keyboard(),
-        )
 
     elif text in CRYPTO_BUTTONS:
 
