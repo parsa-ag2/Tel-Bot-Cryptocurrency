@@ -235,6 +235,44 @@ async def remove_channel_save(
     return ConversationHandler.END
 
 # =========================
+# List Channels
+# =========================
+
+async def list_channels(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    channels = get_channels()
+
+    if not channels:
+
+        text = "❌ هیچ کانال اجباری ثبت نشده است."
+
+    else:
+
+        text = "📋 لیست کانال‌های اجباری:\n\n"
+
+        for channel in channels:
+
+            username = (
+                f"@{channel.username}"
+                if channel.username
+                else "ندارد"
+            )
+
+            text += (
+                f"📢 {channel.title}\n"
+                f"🆔 {channel.channel_id}\n"
+                f"🔗 {username}\n\n"
+            )
+
+    await update.message.reply_text(
+        text,
+        reply_markup=channel_keyboard()
+    )
+
+# =========================
 # Add Admin Start
 # =========================
 
@@ -444,6 +482,12 @@ def settings_handlers():
             filters.Regex("^📢 کانال‌های اجباری$"),
             channel_panel
         ),
+        
+        # لیست کانال‌ها
+        MessageHandler(
+            filters.Regex("^📋 لیست کانال‌ها$"),
+            list_channels
+        ),        
 
         # لیست ادمین
         MessageHandler(
@@ -460,41 +504,60 @@ def settings_handlers():
 
         ConversationHandler(
 
-            entry_points=[
+        entry_points=[
 
-                MessageHandler(
-                    filters.Regex("^➕ اضافه کردن ادمین$"),
-                    add_admin_start
-                ),
+            MessageHandler(
+                filters.Regex("^➕ اضافه کردن ادمین$"),
+                add_admin_start
+            ),
 
-                MessageHandler(
-                    filters.Regex("^➖ حذف ادمین$"),
-                    remove_admin_start
-                )
+            MessageHandler(
+                filters.Regex("^➖ حذف ادمین$"),
+                remove_admin_start
+            ),
 
-            ],
+            MessageHandler(
+                filters.Regex("^➕ افزودن کانال$"),
+                add_channel_start
+            ),
+
+            MessageHandler(
+                filters.Regex("^➖ حذف کانال$"),
+                remove_channel_start
+            ),
+
+        ],
 
 
             states={
 
                 ADD_ADMIN_ID: [
-
                     MessageHandler(
                         filters.TEXT & ~filters.COMMAND,
                         add_admin_save
                     )
-
                 ],
 
-
                 REMOVE_ADMIN_ID: [
-
                     MessageHandler(
                         filters.TEXT & ~filters.COMMAND,
                         remove_admin_save
                     )
+                ],
 
-                ]
+                ADD_CHANNEL: [
+                    MessageHandler(
+                        filters.TEXT & ~filters.COMMAND,
+                        add_channel_save
+                    )
+                ],
+
+                REMOVE_CHANNEL: [
+                    MessageHandler(
+                        filters.TEXT & ~filters.COMMAND,
+                        remove_channel_save
+                    )
+                ],
 
             },
 
