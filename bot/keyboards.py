@@ -2,7 +2,6 @@ from telegram import ReplyKeyboardMarkup
 
 
 def home_keyboard():
-
     keyboard = [
         ["📊 بازارها"],
         ["⚙️ تنظیمات"],
@@ -15,58 +14,55 @@ def home_keyboard():
     )
 
 
-
 def markets_keyboard():
-
     keyboard = [
         ["🪙 کریپتو"],
         ["💵 فارکس"],
         ["🛢 نفت و کالا"],
+        ["🔙 بازگشت"],
+    ]
+
+    return ReplyKeyboardMarkup(
+        keyboard,
+        resize_keyboard=True,
+        is_persistent=True,
+    )
+
+
+def forex_keyboard(pairs):
+
+    keyboard = []
+
+    row = []
+
+    for pair in pairs:
+
+        row.append(
+            f"💱 {pair}"
+        )
+
+        # هر ردیف 2 دکمه
+        if len(row) == 2:
+            keyboard.append(row)
+            row = []
+
+
+    # اگر یکی باقی ماند
+    if row:
+        keyboard.append(row)
+
+
+    keyboard.append(
         ["🔙 بازگشت"]
-    ]
+    )
+
 
     return ReplyKeyboardMarkup(
         keyboard,
         resize_keyboard=True,
         is_persistent=True,
     )
-
-
-
-def crypto_keyboard():
-
-    keyboard = [
-        ["🟠 BTC", "🔵 ETH"],
-        ["🟢 USDT", "🟡 BNB"],
-        ["⚪ XRP", "🟤 DOGE"],
-        ["🔷 TON", "🟣 SOL"],
-        ["🔙 بازگشت"],
-    ]
-
-    return ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True,
-        is_persistent=True,
-    )
-
-def forex_keyboard():
-
-    keyboard = [
-        ["🇪🇺 EUR/USD", "🇬🇧 GBP/USD"],
-        ["🇺🇸 USD/JPY", "🇦🇺 AUD/USD"],
-        ["🇺🇸 USD/CAD", "🇳🇿 NZD/USD"],
-        ["🇪🇺 EUR/JPY", "🇬🇧 GBP/JPY"],
-        ["🔙 بازگشت"],
-    ]
-
-    return ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True,
-        is_persistent=True,
-    )
-
 def commodities_keyboard():
-
     keyboard = [
         ["🛢 نفت برنت", "🛢 نفت WTI"],
         ["🟡 طلا", "⚪ نقره"],

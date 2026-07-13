@@ -23,57 +23,53 @@ async def bot_added(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="""
-🤖 Crypto Price Bot فعال شد!
-
-📈 دریافت قیمت لحظه‌ای بازارها در گروه
+🤖 ربات قیمت بازار فعال شد!
 
 
-🪙 ارزهای دیجیتال:
+📊 برای دریافت قیمت، فقط اسم یا نماد ارز، کالا یا جفت ارز را ارسال کنید.
 
-🟠 بیت‌کوین (BTC)
-🔵 اتریوم (ETH)
-🟢 تتر (USDT)
-🟡 بایننس کوین (BNB)
-⚪ ریپل (XRP)
-🟤 دوج کوین (DOGE)
-🔷 تون کوین (TON)
-🟣 سولانا (SOL)
+
+نمونه‌ها:
+
+
+🪙 ارز دیجیتال:
+
+BTC
+ETH
+SOL
+DOGE
+بیت کوین
 
 
 💱 فارکس:
 
-🇪🇺 EUR/USD
-🇬🇧 GBP/USD
-🇯🇵 USD/JPY
-🇦🇺 AUD/USD
-🇨🇦 USD/CAD
+EUR/USD
+EURUSD
+GBPUSD
+JPY
 
 
 🛢 کالاها:
 
-🟡 طلا
-⚪ نقره
-🛢 نفت برنت
-🛢 نفت WTI
-🟤 مس
-🔴 گاز طبیعی
+طلا
+نقره
+نفت
+مس
 
 
-💡 نمونه درخواست:
+مثال:
 
-قیمت بیت کوین
+قیمت BTC
 
 طلا
 
-ETH
-
-EUR/USD
+EURUSD
 
 
-📱 برای امکانات کامل:
-در چت خصوصی ربات /start را بزنید.
+ربات قیمت لحظه‌ای را نمایش می‌دهد 📈
 
 
-⚡ Crypto Price Bot
+⚡ Market Price Bot
 """
         )
+        

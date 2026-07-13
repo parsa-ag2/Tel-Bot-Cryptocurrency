@@ -1,5 +1,34 @@
 import requests
 
+from config import TWELVE_DATA_API_KEY, TWELVE_DATA_BASE_URL
+
+_coin_cache = None
+
+def get_all_coins():
+    global _coin_cache
+
+    if _coin_cache is None:
+        url = "https://api.coingecko.com/api/v3/coins/list"
+        _coin_cache = requests.get(url, timeout=10).json()
+
+    return _coin_cache
+
+
+def find_coin(query):
+    query = query.lower().strip()
+
+    for coin in get_all_coins():
+        if (
+            coin["id"].lower() == query
+            or coin["symbol"].lower() == query
+            or coin["name"].lower() == query
+        ):
+            return coin
+
+    return None
+
+
+
 # ---------- کریپتو ----------
 
 def get_price(coin_id):
@@ -69,43 +98,124 @@ def get_usdt_toman():
         )
 
         return None
-# ---------- فارکس ----------
+# ---------- فارکس Twelve Data ----------
 
 
-FOREX_SYMBOLS = {
-    "EUR/USD": ("EUR", "USD"),
-    "GBP/USD": ("GBP", "USD"),
-    "USD/JPY": ("USD", "JPY"),
-    "AUD/USD": ("AUD", "USD"),
-    "USD/CAD": ("USD", "CAD"),
-    "NZD/USD": ("NZD", "USD"),
-    "EUR/JPY": ("EUR", "JPY"),
-    "GBP/JPY": ("GBP", "JPY"),
-}
+
+_forex_cache = None
 
 
-def get_forex_price(pair):
+def get_all_forex_pairs():
 
-    if pair not in FOREX_SYMBOLS:
-        return None
+    global _forex_cache
 
-    base, quote = FOREX_SYMBOLS[pair]
+    if _forex_cache is not None:
+        return _forex_cache
 
-    url = f"https://api.frankfurter.app/latest?from={base}&to={quote}"
+
+    url = f"{TWELVE_DATA_BASE_URL}/forex_pairs"
+
+
+    params = {
+        "apikey": TWELVE_DATA_API_KEY
+    }
+
 
     try:
-        response = requests.get(url, timeout=10)
+
+        response = requests.get(
+            url,
+            params=params,
+            timeout=10
+        )
+
         response.raise_for_status()
 
         data = response.json()
 
-        return {
-            "price": float(data["rates"][quote]),
-            "change": 0.0
-        }
+
+        pairs = []
+
+
+        for item in data.get("data", []):
+
+            symbol = item.get("symbol")
+
+            if symbol:
+                pairs.append(symbol)
+
+
+        _forex_cache = pairs
+
+        return pairs
+
 
     except Exception as e:
-        print(e)
+
+        print(
+            "FOREX LIST ERROR:",
+            e
+        )
+
+        return []
+
+
+
+def get_forex_price(pair):
+
+    url = f"{TWELVE_DATA_BASE_URL}/quote"
+
+
+    params = {
+        "symbol": pair,
+        "apikey": TWELVE_DATA_API_KEY
+    }
+
+
+    try:
+
+        response = requests.get(
+            url,
+            params=params,
+            timeout=10
+        )
+
+
+        response.raise_for_status()
+
+
+        data = response.json()
+
+
+        if "close" not in data:
+            print(
+                "TWELVE ERROR:",
+                data
+            )
+            return None
+
+
+
+        return {
+            "symbol": pair,
+            "price": float(data["close"]),
+            "change": float(
+                data.get(
+                    "percent_change",
+                    0
+                )
+            )
+        }
+
+
+
+    except Exception as e:
+
+        print(
+            "FOREX PRICE ERROR:",
+            e
+        )
+
         return None
     
 # ---------- شاخص ها  ----------
