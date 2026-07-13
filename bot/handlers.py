@@ -10,7 +10,8 @@ from services.market import (
     get_commodity_price,
     get_usdt_toman,
     search_coins,
-    find_coin_by_name
+    find_coin_by_name,
+    find_market
 )
 from bot.keyboards import (
     home_keyboard,
@@ -164,6 +165,38 @@ async def text_handler(
 
     text = update.message.text.strip()
 
+    market = find_market(text.lower())
+
+    if market:
+
+        if market["type"] == "crypto":
+
+            await send_price(
+                update,
+                market["data"]
+            )
+
+            return
+
+
+        elif market["type"] == "forex":
+
+            await send_forex(
+                update,
+                market["data"]
+            )
+
+            return
+
+
+        elif market["type"] == "commodity":
+
+            await send_commodity(
+                update,
+                market["data"]
+            )
+
+            return
 
     if text == "📊 بازارها":
 
