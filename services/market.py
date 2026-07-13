@@ -15,17 +15,46 @@ def get_all_coins():
 
 
 def find_coin(query):
+
     query = query.lower().strip()
 
-    for coin in get_all_coins():
-        if (
-            coin["id"].lower() == query
-            or coin["symbol"].lower() == query
-            or coin["name"].lower() == query
-        ):
+    coins = get_all_coins()
+
+
+    # exact id
+    for coin in coins:
+        if coin["id"].lower() == query:
             return coin
 
-    return None
+
+    # exact name
+    for coin in coins:
+        if coin["name"].lower() == query:
+            return coin
+
+
+    # symbol matches
+    matches = []
+
+    for coin in coins:
+        if coin["symbol"].lower() == query:
+            matches.append(coin)
+
+
+    if not matches:
+        return None
+
+
+    # پیدا کردن کوینی که قیمت واقعی دارد
+    for coin in matches:
+
+        price = get_price(coin["id"])
+
+        if price and price["usd"] > 0:
+            return coin
+
+
+    return matches[0]
 
 
 

@@ -14,12 +14,9 @@ from services.market import (
 
 MARKET_WORDS = {
 
-    # دلار
     "دلار": ("usd", "USD"),
     "usd": ("usd", "USD"),
 
-
-    # کالاها
     "طلا": ("commodity", "GOLD"),
     "gold": ("commodity", "GOLD"),
 
@@ -45,7 +42,6 @@ async def market_message_handler(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    # فقط گروه
     if update.effective_chat.type == ChatType.PRIVATE:
         return
 
@@ -57,12 +53,150 @@ async def market_message_handler(
     text = update.message.text.lower().strip()
 
 
+    # =====================
+    # 1) Forex
+    # =====================
+
+    forex_pairs = get_all_forex_pairs()
+
+    query = text.upper().replace(
+        " ",
+        ""
+    )
+
+
+    for pair in forex_pairs:
+
+        normalized = pair.replace(
+            "/",
+            ""
+        )
+
+
+        # EUR
+        if query == normalized[:3]:
+
+
+            result = get_forex_price(pair)
+
+
+            if result:
+
+                await update.message.reply_text(
+                    f"""
+💱 {pair}
+
+
+💵 قیمت:
+{result['price']}
+
+
+📈 تغییر:
+{result['change']:.2f}%
+"""
+                )
+
+            return
+
+
+
+        # EURUSD
+        if query == normalized:
+
+
+            result = get_forex_price(pair)
+
+
+            if result:
+
+                await update.message.reply_text(
+                    f"""
+💱 {pair}
+
+
+💵 قیمت:
+{result['price']}
+
+
+📈 تغییر:
+{result['change']:.2f}%
+"""
+                )
+
+            return
+
+
 
     # =====================
-    # Crypto
+    # 2) USD / Commodities
+    # =====================
+
+    for word, data in MARKET_WORDS.items():
+
+
+        if word in text:
+
+
+            market_type, symbol = data
+
+
+
+            if market_type == "usd":
+
+
+                usdt_toman = get_usdt_toman()
+
+
+                if usdt_toman:
+
+                    await update.message.reply_text(
+                        f"""
+💵 دلار آمریکا
+
+
+🇮🇷 قیمت:
+
+{usdt_toman:,.0f} تومان
+"""
+                    )
+
+                return
+
+
+
+            elif market_type == "commodity":
+
+
+                result = get_commodity_price(symbol)
+
+
+                if result:
+
+                    await update.message.reply_text(
+                        f"""
+📊 {word}
+
+
+💵 قیمت:
+{result['price']}
+
+
+📈 تغییر:
+{result['change']:.2f}%
+"""
+                    )
+
+                return
+
+
+
+
+    # =====================
+    # 3) Crypto
     # =====================
 
     coin = find_coin(text)
+
 
     if coin:
 
@@ -107,131 +241,3 @@ ${usd:,.2f}
             )
 
             return
-
-
-
-
-    # =====================
-    # Dynamic Forex
-    # =====================
-
-    forex_pairs = get_all_forex_pairs()
-
-
-    query = text.upper().replace(
-        " ",
-        ""
-    )
-
-
-    for pair in forex_pairs:
-
-        normalized = pair.replace(
-            "/",
-            ""
-        )
-
-
-        if query == normalized:
-
-
-            result = get_forex_price(
-                pair
-            )
-
-
-            if result:
-
-                await update.message.reply_text(
-                    f"""
-💱 {pair}
-
-
-💵 قیمت:
-{result['price']}
-
-
-📈 تغییر:
-{result['change']:.2f}%
-"""
-                )
-
-
-            return
-
-
-
-
-    # =====================
-    # USD / Commodities
-    # =====================
-
-    for word, data in MARKET_WORDS.items():
-
-
-        if word in text:
-
-
-            market_type, symbol = data
-
-
-
-            # -----------------
-            # دلار
-            # -----------------
-
-            if market_type == "usd":
-
-
-                usdt_toman = get_usdt_toman()
-
-
-                if usdt_toman:
-
-                    await update.message.reply_text(
-                        f"""
-💵 دلار آمریکا
-
-
-🇮🇷 قیمت:
-
-{usdt_toman:,.0f} تومان
-"""
-                    )
-
-
-                return
-
-
-
-
-            # -----------------
-            # Commodity
-            # -----------------
-
-            elif market_type == "commodity":
-
-
-                result = get_commodity_price(
-                    symbol
-                )
-
-
-                if result:
-
-                    await update.message.reply_text(
-                        f"""
-📊 {word}
-
-
-💵 قیمت:
-{result['price']}
-
-
-📈 تغییر:
-{result['change']:.2f}%
-"""
-                    )
-
-
-                return
