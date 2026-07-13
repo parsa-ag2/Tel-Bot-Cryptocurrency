@@ -7,7 +7,8 @@ from services.market import (
     get_all_forex_pairs,
     get_commodity_price,
     get_usdt_toman,
-    find_coin,
+    search_coins,
+    find_coin_by_name,
 )
 
 
@@ -172,49 +173,64 @@ async def market_message_handler(
     # 3) Crypto
     # =====================
 
-    coin = find_coin(text)
+    query = text.strip()
+    normalized_query = query.lower()
 
+    # اول نام کامل را بررسی کن
+    coin = find_coin_by_name(normalized_query)
 
+    if not coin:
+        coins = search_coins(query)
+
+        if not coins:
+            await update.message.reply_text("❌ ارز پیدا نشد.")
+            return
+
+        elif len(coins) == 1:
+            coin = coins[0]
+
+        else:
+            message = "🔍 چند ارز پیدا شد:\n\n"
+
+            for c in coins[:10]:
+                message += f"• {c['name']} ({c['symbol'].upper()})\n"
+
+            message += "\nنام کامل ارز را بنویسید."
+
+            await update.message.reply_text(message)
+            return
+        
     if coin:
 
-        result = get_price(
-            coin["id"]
-        )
-
+        result = get_price(coin["id"])
 
         if result:
 
             usd = result["usd"]
             change = result["change"]
 
-
             usdt_toman = get_usdt_toman()
-
 
             toman_text = ""
 
-
             if usdt_toman:
-
                 toman_text = (
                     f"\n🇮🇷 تومان تقریبی:\n"
                     f"{usd * usdt_toman:,.0f} تومان"
                 )
 
-
             await update.message.reply_text(
                 f"""
-🪙 {coin['name']} ({coin['symbol'].upper()})
+    🪙 {coin['name']} ({coin['symbol'].upper()})
 
+    💵 قیمت:
+    ${usd:,.2f}
 
-💵 قیمت:
-${usd:,.2f}
+    {toman_text}
 
-{toman_text}
-
-📊 تغییر 24h:
-{change:.2f}%
-"""
+    📊 تغییر 24h:
+    {change:.2f}%
+    """
             )
 
             return
