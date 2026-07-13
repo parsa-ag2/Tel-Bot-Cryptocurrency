@@ -13,50 +13,56 @@ def get_all_coins():
 
     return _coin_cache
 
+def find_coin_by_name(name):
 
-def find_coin(query):
-
-    query = query.lower().strip()
+    name = name.strip().lower()
 
     coins = get_all_coins()
 
-
-    # exact id
     for coin in coins:
-        if coin["id"].lower() == query:
+
+        if coin["name"].lower() == name:
             return coin
 
-
-    # exact name
-    for coin in coins:
-        if coin["name"].lower() == query:
-            return coin
+    return None
 
 
-    # symbol matches
-    matches = []
 
-    for coin in coins:
-        if coin["symbol"].lower() == query:
-            matches.append(coin)
+def search_coins(query):
 
+    query = query.strip()
 
-    if not matches:
-        return None
+    url = "https://api.coingecko.com/api/v3/search"
 
+    try:
 
-    # پیدا کردن کوینی که قیمت واقعی دارد
-    for coin in matches:
+        response = requests.get(
+            url,
+            params={"query": query},
+            timeout=10
+        )
 
-        price = get_price(coin["id"])
+        response.raise_for_status()
 
-        if price and price["usd"] > 0:
-            return coin
+        coins = response.json().get("coins", [])
 
+        if not coins:
+            return []
 
-    return matches[0]
+        coins.sort(
+            key=lambda c: (
+                c["symbol"].lower() != query.lower(),
+                c.get("market_cap_rank") or 999999
+            )
+        )
 
+        return coins
 
+    except Exception as e:
+
+        print("SEARCH ERROR:", e)
+
+        return []
 
 # ---------- کریپتو ----------
 

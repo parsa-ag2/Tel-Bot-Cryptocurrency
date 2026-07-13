@@ -1,7 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
-
 from services.market import (
     get_price,
     get_forex_price,
@@ -10,6 +9,7 @@ from services.market import (
     get_usdt_toman,
     find_coin,
 )
+
 
 
 MARKET_WORDS = {
@@ -57,74 +57,51 @@ async def market_message_handler(
     # 1) Forex
     # =====================
 
-    forex_pairs = get_all_forex_pairs()
-
-    query = text.upper().replace(
-        " ",
-        ""
-    )
+    query = text.upper().replace(" ", "")
 
 
-    for pair in forex_pairs:
+    # اگر کاربر جفت ارز نوشته
+    if "/" in query:
 
-        normalized = pair.replace(
-            "/",
-            ""
+        result = get_forex_price(query)
+
+        if result:
+
+            await update.message.reply_text(
+                f"""
+    💱 {query}
+
+    💵 قیمت:
+    {result['price']}
+
+    📈 تغییر:
+    {result['change']:.2f}%
+    """
+            )
+
+            return
+
+
+    # اگر فقط اسم ارز نوشته
+    symbol = f"{query}/USD"
+
+    result = get_forex_price(symbol)
+
+    if result:
+
+        await update.message.reply_text(
+            f"""
+    💱 {symbol}
+
+    💵 قیمت:
+    {result['price']}
+
+    📈 تغییر:
+    {result['change']:.2f}%
+    """
         )
 
-
-        # EUR
-        if query == normalized[:3]:
-
-
-            result = get_forex_price(pair)
-
-
-            if result:
-
-                await update.message.reply_text(
-                    f"""
-💱 {pair}
-
-
-💵 قیمت:
-{result['price']}
-
-
-📈 تغییر:
-{result['change']:.2f}%
-"""
-                )
-
-            return
-
-
-
-        # EURUSD
-        if query == normalized:
-
-
-            result = get_forex_price(pair)
-
-
-            if result:
-
-                await update.message.reply_text(
-                    f"""
-💱 {pair}
-
-
-💵 قیمت:
-{result['price']}
-
-
-📈 تغییر:
-{result['change']:.2f}%
-"""
-                )
-
-            return
-
+        return
 
 
     # =====================

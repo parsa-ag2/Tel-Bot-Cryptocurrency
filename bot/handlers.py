@@ -8,9 +8,10 @@ from services.market import (
     get_forex_price,
     get_all_forex_pairs,
     get_commodity_price,
-    get_usdt_toman
+    get_usdt_toman,
+    search_coins,
+    find_coin_by_name
 )
-from services.market import find_coin
 from bot.keyboards import (
     home_keyboard,
     markets_keyboard,
@@ -28,25 +29,19 @@ COMMODITIES = {
     "🔴 گاز طبیعی": ("NATGAS", "🔴"),
 }
 
-async def send_price(update: Update, coin_id: str):
+async def send_price(update: Update, coin: dict):
 
-    coin = find_coin(coin_id)
-
-    name = f"{coin['name']} ({coin['symbol'].upper()})"
-    emoji = "🪙"
-
-    data = get_price(coin_id)
+    data = get_price(coin["id"])
 
     if not data:
-        await update.message.reply_text("❌ خطا در دریافت قیمت.")
+        await update.message.reply_text(
+            "❌ خطا در دریافت قیمت."
+        )
         return
-
 
     usd = data["usd"]
     change = data["change"]
 
-
-    # دریافت قیمت تتر به تومان از نوبیتکس
     usdt_toman = get_usdt_toman()
 
     toman_text = ""
@@ -60,18 +55,15 @@ async def send_price(update: Update, coin_id: str):
             f"<b>{toman_price:,.0f}</b> تومان"
         )
 
-
     change_emoji = "📈" if change >= 0 else "📉"
 
-
     text = (
-        f"{emoji} <b>{name}</b>\n\n"
+        f"🪙 <b>{coin['name']} ({coin['symbol'].upper()})</b>\n\n"
         f"💵 قیمت دلار: <b>${usd:,.2f}</b>"
         f"{toman_text}\n"
         f"{change_emoji} تغییر ۲۴ ساعته: "
         f"<b>{change:.2f}%</b>"
     )
-
 
     await update.message.reply_text(
         text,
@@ -170,7 +162,7 @@ async def text_handler(
         return
 
 
-    text = update.message.text
+    text = update.message.text.strip()
 
 
     if text == "📊 بازارها":
@@ -298,22 +290,41 @@ async def text_handler(
 
     elif context.user_data.get("waiting_crypto"):
 
-        coin = find_coin(text)
+        query = text.strip()
+        normalized_query = query.lower()
+
+        # اگر نام کامل وارد شده باشد (Bitcoin, ethereum, ...)
+        coin = find_coin_by_name(normalized_query)
 
         if coin:
+            await send_price(update, coin)
+            return
 
-            await send_price(
-                update,
-                coin["id"]
-            )
+        # در غیر این صورت با نماد یا عبارت جستجو کن
+        coins = search_coins(query)
 
-        else:
-
+        if not coins:
             await update.message.reply_text(
                 "❌ ارز پیدا نشد.\n"
                 "لطفاً نام یا نماد ارز را دوباره وارد کنید."
             )
+            return
 
+        if len(coins) == 1:
+            await send_price(update, coins[0])
+            return
+
+        message = "🔍 چند ارز با این نماد پیدا شد:\n\n"
+
+        for i, coin in enumerate(coins[:10], start=1):
+            message += (
+                f"{i}️⃣ {coin['name']} "
+                f"({coin['symbol'].upper()})\n"
+            )
+
+        message += "\nلطفاً نام کامل ارز را وارد کنید."
+
+        await update.message.reply_text(message)
 
     else:
         return
