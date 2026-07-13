@@ -1,41 +1,14 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
+
 from services.market import (
     get_price,
     get_forex_price,
-    get_all_forex_pairs,
     get_commodity_price,
     get_usdt_toman,
-    search_coins,
-    find_coin_by_name,
+    find_market,
 )
-
-
-
-MARKET_WORDS = {
-
-    "دلار": ("usd", "USD"),
-    "usd": ("usd", "USD"),
-
-    "طلا": ("commodity", "GOLD"),
-    "gold": ("commodity", "GOLD"),
-
-    "نقره": ("commodity", "SILVER"),
-    "silver": ("commodity", "SILVER"),
-
-    "نفت برنت": ("commodity", "BRENT"),
-    "برنت": ("commodity", "BRENT"),
-
-    "نفت": ("commodity", "WTI"),
-    "نفت wti": ("commodity", "WTI"),
-
-    "مس": ("commodity", "COPPER"),
-
-    "گاز": ("commodity", "NATGAS"),
-    "گاز طبیعی": ("commodity", "NATGAS"),
-}
-
 
 
 async def market_message_handler(
@@ -43,9 +16,9 @@ async def market_message_handler(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
+    # فقط گروه‌ها
     if update.effective_chat.type == ChatType.PRIVATE:
         return
-
 
     if not update.message or not update.message.text:
         return
@@ -54,105 +27,86 @@ async def market_message_handler(
     text = update.message.text.lower().strip()
 
 
-    # =====================
-    # 1) Forex
-    # =====================
+    # تشخیص بازار
+    market = find_market(text)
 
-    query = text.upper().replace(" ", "")
+    # اگر بازار نبود، هیچ کاری نکن
+    if not market:
+        return
 
 
-    # اگر کاربر جفت ارز نوشته
-    if "/" in query:
 
-        result = get_forex_price(query)
+    # =========================
+    # Crypto
+    # =========================
 
-        if result:
+    if market["type"] == "crypto":
 
-            await update.message.reply_text(
-                f"""
-    💱 {query}
+        coin = market["data"]
 
-    💵 قیمت:
-    {result['price']}
+        result = get_price(coin["id"])
 
-    📈 تغییر:
-    {result['change']:.2f}%
-    """
-            )
 
+        if not result:
             return
 
 
-    # اگر فقط اسم ارز نوشته
-    symbol = f"{query}/USD"
+        usd = result["usd"]
+        change = result["change"]
 
-    result = get_forex_price(symbol)
 
-    if result:
+        toman_text = ""
+
+        usdt_toman = get_usdt_toman()
+
+        if usdt_toman:
+
+            toman_text = (
+                f"\n🇮🇷 تومان تقریبی:\n"
+                f"{usd * usdt_toman:,.0f} تومان"
+            )
+
 
         await update.message.reply_text(
             f"""
-    💱 {symbol}
+🪙 {coin['name']} ({coin['symbol'].upper()})
 
-    💵 قیمت:
-    {result['price']}
 
-    📈 تغییر:
-    {result['change']:.2f}%
-    """
+💵 قیمت:
+${usd:,.2f}
+
+
+{toman_text}
+
+
+📊 تغییر 24h:
+{change:.2f}%
+"""
         )
 
         return
 
 
-    # =====================
-    # 2) USD / Commodities
-    # =====================
-
-    for word, data in MARKET_WORDS.items():
 
 
-        if word in text:
+    # =========================
+    # Forex
+    # =========================
+
+    elif market["type"] == "forex":
+
+        pair = market["data"]
+
+        result = get_forex_price(pair)
 
 
-            market_type, symbol = data
+        if not result:
+            return
 
 
-
-            if market_type == "usd":
-
-
-                usdt_toman = get_usdt_toman()
-
-
-                if usdt_toman:
-
-                    await update.message.reply_text(
-                        f"""
-💵 دلار آمریکا
-
-
-🇮🇷 قیمت:
-
-{usdt_toman:,.0f} تومان
-"""
-                    )
-
-                return
-
-
-
-            elif market_type == "commodity":
-
-
-                result = get_commodity_price(symbol)
-
-
-                if result:
-
-                    await update.message.reply_text(
-                        f"""
-📊 {word}
+        await update.message.reply_text(
+            f"""
+💱 {pair}
 
 
 💵 قیمت:
@@ -162,75 +116,41 @@ async def market_message_handler(
 📈 تغییر:
 {result['change']:.2f}%
 """
-                    )
+        )
 
-                return
-
-
+        return
 
 
-    # =====================
-    # 3) Crypto
-    # =====================
 
-    query = text.strip()
-    normalized_query = query.lower()
 
-    # اول نام کامل را بررسی کن
-    coin = find_coin_by_name(normalized_query)
 
-    if not coin:
-        coins = search_coins(query)
+    # =========================
+    # Commodity
+    # =========================
 
-        if not coins:
-            await update.message.reply_text("❌ ارز پیدا نشد.")
+    elif market["type"] == "commodity":
+
+        symbol = market["data"]
+
+        result = get_commodity_price(symbol)
+
+
+        if not result:
             return
 
-        elif len(coins) == 1:
-            coin = coins[0]
 
-        else:
-            message = "🔍 چند ارز پیدا شد:\n\n"
+        await update.message.reply_text(
+            f"""
+📊 {symbol}
 
-            for c in coins[:10]:
-                message += f"• {c['name']} ({c['symbol'].upper()})\n"
 
-            message += "\nنام کامل ارز را بنویسید."
+💵 قیمت:
+{result['price']}
 
-            await update.message.reply_text(message)
-            return
-        
-    if coin:
 
-        result = get_price(coin["id"])
+📈 تغییر:
+{result['change']:.2f}%
+"""
+        )
 
-        if result:
-
-            usd = result["usd"]
-            change = result["change"]
-
-            usdt_toman = get_usdt_toman()
-
-            toman_text = ""
-
-            if usdt_toman:
-                toman_text = (
-                    f"\n🇮🇷 تومان تقریبی:\n"
-                    f"{usd * usdt_toman:,.0f} تومان"
-                )
-
-            await update.message.reply_text(
-                f"""
-    🪙 {coin['name']} ({coin['symbol'].upper()})
-
-    💵 قیمت:
-    ${usd:,.2f}
-
-    {toman_text}
-
-    📊 تغییر 24h:
-    {change:.2f}%
-    """
-            )
-
-            return
+        return

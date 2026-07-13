@@ -4,6 +4,73 @@ from config import TWELVE_DATA_API_KEY, TWELVE_DATA_BASE_URL
 
 _coin_cache = None
 
+
+def find_market(text):
+
+    text = text.strip().lower()
+
+    # اول کریپتو
+    coin = find_coin_by_name(text)
+
+    if coin:
+        return {
+            "type": "crypto",
+            "data": coin
+        }
+
+
+    # سرچ کریپتو (BTC, ETH, ...)
+    coins = search_coins(text)
+
+    if len(coins) == 1:
+        return {
+            "type": "crypto",
+            "data": coins[0]
+        }
+
+
+    # فارکس
+    pairs = get_all_forex_pairs()
+
+    query = text.upper().replace(" ", "")
+
+    if query in pairs:
+        return {
+            "type": "forex",
+            "data": query
+        }
+
+
+    # ارز کوتاه مثل EUR
+    pair = query + "/USD"
+
+    if pair in pairs:
+        return {
+            "type": "forex",
+            "data": pair
+        }
+
+
+    # کالاها
+    commodities = {
+        "gold": "GOLD",
+        "طلا": "GOLD",
+        "silver": "SILVER",
+        "نقره": "SILVER",
+        "oil": "BRENT",
+        "نفت": "BRENT",
+    }
+
+
+    if text in commodities:
+        return {
+            "type": "commodity",
+            "data": commodities[text]
+        }
+
+
+    return None
+
 def get_all_coins():
     global _coin_cache
 
