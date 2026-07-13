@@ -19,8 +19,13 @@ CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")
 # Twelve Data API
 # =====================
 
-TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
+TWELVE_DATA_API_KEY = os.getenv(
+    "TWELVE_DATA_API_KEY"
+)
 
+TWELVE_DATA_BASE_URL = (
+    "https://api.twelvedata.com"
+)
 
 # =====================
 # Database
