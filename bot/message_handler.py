@@ -36,53 +36,72 @@ async def market_message_handler(
 
 
 
-
     # =========================
-    # Crypto Search
+    # اول فارکس
     # =========================
 
-    coin = find_coin_by_name(text)
+    market = find_market(text)
 
-    if coin:
 
-        market = {
-            "type": "crypto",
-            "data": coin
-        }
+    # اگر فارکس یا کالا بود مستقیم برو
+    if market:
+
+        pass
 
     else:
 
-        coins = search_coins(text)
+        # =========================
+        # بعد کریپتو
+        # =========================
 
-        # چند ارز پیدا شد
-        if len(coins) > 1:
+        coin = find_coin_by_name(text)
 
-            message = "🔍 چند ارز پیدا شد:\n\n"
-
-            for i, coin in enumerate(coins[:10], start=1):
-                message += (
-                    f"{i}️⃣ {coin['name']} "
-                    f"({coin['symbol'].upper()})\n"
-                )
-
-            message += "\nلطفاً نام کامل ارز را وارد کنید."
-
-            await update.message.reply_text(message)
-
-            return
-
-        # فقط یک ارز پیدا شد
-        elif len(coins) == 1:
+        if coin:
 
             market = {
                 "type": "crypto",
-                "data": coins[0]
+                "data": coin
             }
 
         else:
 
-            market = find_market(text)
+            coins = search_coins(text)
 
+
+            if len(coins) > 1:
+
+                message = "🔍 چند ارز پیدا شد:\n\n"
+
+                for i, coin in enumerate(coins[:10], start=1):
+
+                    message += (
+                        f"{i}️⃣ {coin['name']} "
+                        f"({coin['symbol'].upper()})\n"
+                    )
+
+
+                message += "\nلطفاً نام کامل ارز را وارد کنید."
+
+
+                await update.message.reply_text(
+                    message
+                )
+
+                return
+
+
+            elif len(coins) == 1:
+
+                market = {
+                    "type": "crypto",
+                    "data": coins[0]
+                }
+
+
+            else:
+
+                market = None
+   
     # =========================
     # Forex / Commodity
     # =========================
