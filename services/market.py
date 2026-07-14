@@ -19,16 +19,6 @@ def find_market(text):
         }
 
 
-    # سرچ کریپتو (BTC, ETH, ...)
-    coins = search_coins(text)
-
-    if len(coins) == 1:
-        return {
-            "type": "crypto",
-            "data": coins[0]
-        }
-
-
     # فارکس
     pairs = get_all_forex_pairs()
 
@@ -105,29 +95,56 @@ def search_coins(query):
 
         response = requests.get(
             url,
-            params={"query": query},
+            params={
+                "query": query
+            },
             timeout=10
         )
 
         response.raise_for_status()
 
-        coins = response.json().get("coins", [])
+        coins = response.json().get(
+            "coins",
+            []
+        )
+
 
         if not coins:
             return []
 
+
+        query_lower = query.lower()
+
+
+        # اولویت بندی نتایج
         coins.sort(
             key=lambda c: (
-                c["symbol"].lower() != query.lower(),
+                c["symbol"].lower() != query_lower,
+                c["name"].lower() != query_lower,
                 c.get("market_cap_rank") or 999999
             )
         )
 
+
+        # اگر اسم کامل بود فقط همان ارز
+        for coin in coins:
+
+            if coin["name"].lower() == query_lower:
+
+                return [
+                    coin
+                ]
+
+
         return coins
+
 
     except Exception as e:
 
-        print("SEARCH ERROR:", e)
+        print(
+            "SEARCH ERROR:",
+            e
+        )
 
         return []
 

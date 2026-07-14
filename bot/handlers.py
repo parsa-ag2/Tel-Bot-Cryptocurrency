@@ -165,6 +165,70 @@ async def text_handler(
 
     text = update.message.text.strip()
 
+    # =========================
+    # دکمه ها
+    # =========================
+
+    if text == "📊 بازارها":
+
+        await update.message.reply_text(
+            "نوع بازار را انتخاب کن 👇",
+            reply_markup=markets_keyboard()
+        )
+        return
+
+
+    elif text == "🪙 کریپتو":
+
+        context.user_data.clear()
+        context.user_data["waiting_crypto"] = True
+
+        await update.message.reply_text(
+            "🪙 نام یا نماد ارز را وارد کنید.\n\n"
+            "مثال:\n"
+            "BTC\n"
+            "ETH\n"
+            "Bitcoin"
+        )
+        return
+
+
+    elif text == "💵 فارکس":
+
+        context.user_data.clear()
+        context.user_data["waiting_forex"] = True
+
+        await update.message.reply_text(
+            "💱 نماد فارکس را وارد کنید.\n\n"
+            "مثال:\n"
+            "EUR\n"
+            "EUR/USD\n"
+            "USD/JPY"
+        )
+        return
+
+
+    elif text == "🛢 نفت و کالا":
+
+        context.user_data.clear()
+        context.user_data["waiting_commodity"] = True
+
+        await update.message.reply_text(
+            "کالای موردنظر را انتخاب کن 👇",
+            reply_markup=commodities_keyboard()
+        )
+        return
+
+
+    elif text == "🔙 بازگشت":
+
+        context.user_data.clear()
+
+        await update.message.reply_text(
+            "منوی اصلی",
+            reply_markup=home_keyboard()
+        )
+        return
 
     # =========================
     # حالت کریپتو
@@ -367,85 +431,6 @@ async def text_handler(
             return
 
 
-
-    # =========================
-    # دکمه ها
-    # =========================
-
-
-    if text == "📊 بازارها":
-
-        await update.message.reply_text(
-            "نوع بازار را انتخاب کن 👇",
-            reply_markup=markets_keyboard()
-        )
-
-
-
-    elif text == "🪙 کریپتو":
-
-
-        context.user_data.clear()
-
-        context.user_data["waiting_crypto"] = True
-
-
-        await update.message.reply_text(
-            "🪙 نام یا نماد ارز را وارد کنید.\n\n"
-            "مثال:\n"
-            "BTC\n"
-            "ETH\n"
-            "Bitcoin"
-        )
-
-
-
-
-    elif text == "💵 فارکس":
-
-
-        context.user_data.clear()
-
-        context.user_data["waiting_forex"] = True
-
-
-        await update.message.reply_text(
-            "💱 نماد فارکس را وارد کنید.\n\n"
-            "مثال:\n"
-            "EUR\n"
-            "EUR/USD\n"
-            "USD/JPY"
-        )
-
-
-
-
-    elif text == "🛢 نفت و کالا":
-
-
-        context.user_data.clear()
-
-        context.user_data["waiting_commodity"] = True
-
-
-        await update.message.reply_text(
-            "کالای موردنظر را انتخاب کن 👇",
-            reply_markup=commodities_keyboard()
-        )
-
-
-
-
-    elif text == "🔙 بازگشت":
-
-
-        context.user_data.clear()
-
-
-        await update.message.reply_text(
-            "منوی اصلی",
-            reply_markup=home_keyboard()
-        )
 
 
     else:

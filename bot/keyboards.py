@@ -29,39 +29,18 @@ def markets_keyboard():
     )
 
 
-def forex_keyboard(pairs):
-
-    keyboard = []
-
-    row = []
-
-    for pair in pairs:
-
-        row.append(
-            f"💱 {pair}"
-        )
-
-        # هر ردیف 2 دکمه
-        if len(row) == 2:
-            keyboard.append(row)
-            row = []
-
-
-    # اگر یکی باقی ماند
-    if row:
-        keyboard.append(row)
-
-
-    keyboard.append(
-        ["🔙 بازگشت"]
-    )
-
+def back_keyboard():
+    keyboard = [
+        ["🔙 بازگشت"],
+    ]
 
     return ReplyKeyboardMarkup(
         keyboard,
         resize_keyboard=True,
         is_persistent=True,
     )
+
+
 def commodities_keyboard():
     keyboard = [
         ["🛢 نفت برنت", "🛢 نفت WTI"],

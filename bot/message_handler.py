@@ -9,6 +9,7 @@ from services.market import (
     get_usdt_toman,
     find_market,
     search_coins,
+    find_coin_by_name,
 )
 
 
@@ -42,8 +43,9 @@ async def market_message_handler(
     coins = search_coins(text)
 
 
-    # چند ارز پیدا شد
+    # چند ارز مشابه
     if len(coins) > 1:
+
 
         message = "🔍 چند ارز پیدا شد:\n\n"
 
@@ -72,21 +74,24 @@ async def market_message_handler(
 
 
 
-    # فقط یک ارز پیدا شد
-    if len(coins) == 1:
+    # فقط یک ارز
+    elif len(coins) == 1:
+
 
         market = {
             "type": "crypto",
             "data": coins[0]
         }
 
+
     else:
 
+
+        market = find_market(text)
         # =========================
         # Forex / Commodity
         # =========================
 
-        market = find_market(text)
 
 
 
