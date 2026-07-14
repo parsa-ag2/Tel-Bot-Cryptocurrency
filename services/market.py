@@ -127,14 +127,15 @@ def search_coins(query):
 
 
         # اگر اسم کامل بود فقط همان ارز
+# اول نماد دقیق
         for coin in coins:
+            if coin["symbol"].lower() == query_lower:
+                return [coin]
 
+        # بعد اسم دقیق
+        for coin in coins:
             if coin["name"].lower() == query_lower:
-
-                return [
-                    coin
-                ]
-
+                return [coin]
 
         return coins
 

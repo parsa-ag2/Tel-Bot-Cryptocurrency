@@ -36,61 +36,56 @@ async def market_message_handler(
 
 
 
+
     # =========================
     # Crypto Search
     # =========================
 
-    coins = search_coins(text)
+    coin = find_coin_by_name(text)
 
-
-    # چند ارز مشابه
-    if len(coins) > 1:
-
-
-        message = "🔍 چند ارز پیدا شد:\n\n"
-
-
-        for i, coin in enumerate(
-            coins[:10],
-            start=1
-        ):
-
-            message += (
-                f"{i}️⃣ {coin['name']} "
-                f"({coin['symbol'].upper()})\n"
-            )
-
-
-        message += (
-            "\nلطفاً نام کامل ارز را وارد کنید."
-        )
-
-
-        await update.message.reply_text(
-            message
-        )
-
-        return
-
-
-
-    # فقط یک ارز
-    elif len(coins) == 1:
-
+    if coin:
 
         market = {
             "type": "crypto",
-            "data": coins[0]
+            "data": coin
         }
-
 
     else:
 
+        coins = search_coins(text)
 
-        market = find_market(text)
-        # =========================
-        # Forex / Commodity
-        # =========================
+        # چند ارز پیدا شد
+        if len(coins) > 1:
+
+            message = "🔍 چند ارز پیدا شد:\n\n"
+
+            for i, coin in enumerate(coins[:10], start=1):
+                message += (
+                    f"{i}️⃣ {coin['name']} "
+                    f"({coin['symbol'].upper()})\n"
+                )
+
+            message += "\nلطفاً نام کامل ارز را وارد کنید."
+
+            await update.message.reply_text(message)
+
+            return
+
+        # فقط یک ارز پیدا شد
+        elif len(coins) == 1:
+
+            market = {
+                "type": "crypto",
+                "data": coins[0]
+            }
+
+        else:
+
+            market = find_market(text)
+
+    # =========================
+    # Forex / Commodity
+    # =========================
 
 
 
