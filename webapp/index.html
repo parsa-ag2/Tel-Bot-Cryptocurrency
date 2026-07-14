@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Market</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+
+<div class="menu">
+
+
+<h2>
+📈 Market Bot
+</h2>
+
+
+<!-- صفحه اصلی -->
+
+<div id="home" class="page">
+
+
+<button class="blue" onclick="markets()">
+📊 بازارها
+</button>
+
+
+<button class="gray">
+⚙️ تنظیمات
+</button>
+
+
+</div>
+
+
+
+
+<!-- بازارها -->
+
+<div id="markets" class="page hidden">
+
+
+<button class="gold" onclick="crypto()">
+🪙 کریپتو
+</button>
+
+
+<button class="green">
+💵 فارکس
+</button>
+
+
+<button class="orange" onclick="commodities()">
+🛢 نفت و کالا
+</button>
+
+
+
+<button class="red" onclick="home()">
+🔙 بازگشت
+</button>
+
+
+</div>
+
+
+
+
+
+<!-- کالاها -->
+
+<div id="commodities" class="page hidden">
+
+
+<div class="grid">
+
+
+<button class="orange">
+🛢 نفت برنت
+</button>
+
+
+<button class="orange">
+🛢 نفت WTI
+</button>
+
+
+<button class="yellow">
+🟡 طلا
+</button>
+
+
+<button class="white">
+⚪ نقره
+</button>
+
+
+<button class="brown">
+🟤 مس
+</button>
+
+
+<button class="red">
+🔴 گاز طبیعی
+</button>
+
+
+</div>
+
+
+
+<button class="back" onclick="markets()">
+🔙 بازگشت
+</button>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+<script src="app.js"></script>
+
+</body>
+
+</html>

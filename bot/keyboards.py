@@ -1,56 +1,25 @@
-from telegram import ReplyKeyboardMarkup
+from telegram import (
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    WebAppInfo
+)
 
 
-def home_keyboard():
+def app_keyboard():
+
     keyboard = [
-        ["📊 بازارها"],
-        ["⚙️ تنظیمات"],
+        [
+            KeyboardButton(
+                "📱 باز کردن منو",
+                web_app=WebAppInfo(
+                    url="https://YOUR_DOMAIN.com"
+                )
+            )
+        ]
     ]
+
 
     return ReplyKeyboardMarkup(
         keyboard,
-        resize_keyboard=True,
-        is_persistent=True,
-    )
-
-
-def markets_keyboard():
-    keyboard = [
-        ["🪙 کریپتو"],
-        ["💵 فارکس"],
-        ["🛢 نفت و کالا"],
-        ["🔙 بازگشت"],
-    ]
-
-    return ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True,
-        is_persistent=True,
-    )
-
-
-def back_keyboard():
-    keyboard = [
-        ["🔙 بازگشت"],
-    ]
-
-    return ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True,
-        is_persistent=True,
-    )
-
-
-def commodities_keyboard():
-    keyboard = [
-        ["🛢 نفت برنت", "🛢 نفت WTI"],
-        ["🟡 طلا", "⚪ نقره"],
-        ["🟤 مس", "🔴 گاز طبیعی"],
-        ["🔙 بازگشت"],
-    ]
-
-    return ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True,
-        is_persistent=True,
+        resize_keyboard=True
     )
