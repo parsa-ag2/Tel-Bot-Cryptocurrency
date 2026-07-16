@@ -1,7 +1,7 @@
 import time
 
 
-CACHE_TIME = 100 
+CACHE_TIME = 100
 
 
 _cache = {}
@@ -14,12 +14,13 @@ def get_cache(key):
         return None
 
 
-    data, timestamp = _cache[key]
+    data, timestamp, expire = _cache[key]
 
 
-    if time.time() - timestamp > CACHE_TIME:
+    if time.time() - timestamp > expire:
 
         del _cache[key]
+
         return None
 
 
@@ -27,12 +28,26 @@ def get_cache(key):
 
 
 
-def set_cache(key, data):
+
+
+def set_cache(
+    key,
+    data,
+    expire=CACHE_TIME
+):
 
     _cache[key] = (
+
         data,
-        time.time()
+
+        time.time(),
+
+        expire
+
     )
+
+
+
 
 
 def clear_cache():

@@ -2,6 +2,27 @@ import requests
 import matplotlib.pyplot as plt
 
 
+
+def create_chart(
+    market_type,
+    symbol,
+    timeframe
+):
+
+    if market_type == "crypto":
+
+        return create_crypto_chart(
+            symbol,
+            timeframe
+        )
+
+
+    return None
+
+
+
+
+
 def create_crypto_chart(
     coin_id,
     timeframe
@@ -18,29 +39,54 @@ def create_crypto_chart(
     }
 
 
+
     url = (
+
         f"https://api.coingecko.com/api/v3/"
+
         f"coins/{coin_id}/market_chart"
+
     )
+
 
 
     response = requests.get(
+
         url,
+
         params={
-            "vs_currency":"usd",
-            "days":days[timeframe]
+
+            "vs_currency": "usd",
+
+            "days": days.get(
+                timeframe,
+                "1"
+            )
+
         },
+
         timeout=10
+
     )
 
 
-    data=response.json()
+
+    response.raise_for_status()
+
+
+
+    data = response.json()
+
 
 
     prices = [
-        x[1]
-        for x in data["prices"]
+
+        item[1]
+
+        for item in data["prices"]
+
     ]
+
 
 
     plt.figure(
@@ -48,9 +94,11 @@ def create_crypto_chart(
     )
 
 
+
     plt.plot(
         prices
     )
+
 
 
     plt.title(
@@ -58,15 +106,20 @@ def create_crypto_chart(
     )
 
 
+
     file = "chart.png"
 
 
+
     plt.savefig(
-        file
+        file,
+        bbox_inches="tight"
     )
 
 
+
     plt.close()
+
 
 
     return file
