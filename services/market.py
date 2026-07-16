@@ -5,9 +5,132 @@ from config import TWELVE_DATA_API_KEY, TWELVE_DATA_BASE_URL
 _coin_cache = None
 
 
+# =====================
+# Crypto Aliases
+# =====================
+
+CRYPTO_ALIASES = {
+
+    "بیتکوین": "bitcoin",
+    "بیت کوین": "bitcoin",
+    "bitcoin": "bitcoin",
+    "btc": "bitcoin",
+
+    "اتریوم": "ethereum",
+    "ethereum": "ethereum",
+    "eth": "ethereum",
+
+}
+
+
+# =====================
+# Forex Aliases
+# =====================
+
+FOREX_ALIASES = {
+
+    "یورو": "EUR/USD",
+    "eur": "EUR/USD",
+
+    "پوند": "GBP/USD",
+    "gbp": "GBP/USD",
+
+    "ین": "JPY/USD",
+    "jpy": "JPY/USD",
+
+}
+
+
+# =====================
+# Commodity Aliases
+# =====================
+
+COMMODITY_ALIASES = {
+
+    "طلا": "GOLD",
+    "gold": "GOLD",
+    "xau": "GOLD",
+    "xauusd": "GOLD",
+
+    "نقره": "SILVER",
+    "silver": "SILVER",
+
+    "نفت": "BRENT",
+    "oil": "BRENT",
+
+}
+
+
+# =====================
+# USD Aliases
+# =====================
+
+USD_ALIASES = {
+
+    "دلار": "USD",
+    "دلار آمریکا": "USD",
+    "usd": "USD",
+    "تتر": "USD",
+    "usdt": "USD",
+
+}
+
 def find_market(text):
 
     text = text.strip().lower()
+
+
+
+
+    # =====================
+    # Alias های دستی
+    # =====================
+
+
+    # دلار
+    if text in USD_ALIASES:
+
+        return {
+            "type": "usd",
+            "data": USD_ALIASES[text]
+        }
+
+
+    # کالا
+    if text in COMMODITY_ALIASES:
+
+        return {
+            "type": "commodity",
+            "data": COMMODITY_ALIASES[text]
+        }
+
+
+    # فارکس
+    if text in FOREX_ALIASES:
+
+        return {
+            "type": "forex",
+            "data": FOREX_ALIASES[text]
+        }
+
+
+    # کریپتو
+    if text in CRYPTO_ALIASES:
+
+        coin_id = CRYPTO_ALIASES[text]
+
+        coins = get_all_coins()
+
+        for coin in coins:
+
+            if coin["id"] == coin_id:
+
+                return {
+                    "type": "crypto",
+                    "data": coin
+                }
+
+
 
     # اول کریپتو
     coin = find_coin_by_name(text)

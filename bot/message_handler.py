@@ -239,7 +239,7 @@ ${usd:,.2f}
     """
             )
 
-            return   # 👈 این خط رو اضافه کنید
+            return   
 
     # =========================
     # USD / Tether
@@ -254,13 +254,13 @@ ${usd:,.2f}
 
         await update.message.reply_text(
             f"""
-💵 دلار / تتر 
+        💵 دلار / تتر (USDT)
 
-
-🇮🇷 تومان:
-{usdt_toman:,.0f} تومان
-"""
+        🇮🇷 قیمت تقریبی:
+        {usdt_toman:,.0f} تومان
+        """
         )
+        
 
         return
 
