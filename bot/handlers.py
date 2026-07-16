@@ -3,6 +3,8 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from bot.membership import check_user_membership
 from telegram.constants import ChatType
+from datetime import datetime
+from services.chart import create_chart
 from services.market import (
     get_price,
     get_forex_price,
@@ -16,7 +18,8 @@ from services.market import (
 from bot.keyboards import (
     home_keyboard,
     markets_keyboard,
-    commodities_keyboard
+    commodities_keyboard,
+    chart_keyboard
 )
 
 
@@ -32,18 +35,28 @@ COMMODITIES = {
 
 async def send_price(update: Update, coin: dict):
 
+    loading = await update.message.reply_text(
+        "📡 دریافت قیمت بازار 🔄"
+    )
+
+
     data = get_price(coin["id"])
 
     if not data:
-        await update.message.reply_text(
+
+        await loading.edit_text(
             "❌ خطا در دریافت قیمت."
         )
+
         return
+
 
     usd = data["usd"]
     change = data["change"]
 
+
     usdt_toman = get_usdt_toman()
+
 
     toman_text = ""
 
@@ -52,76 +65,269 @@ async def send_price(update: Update, coin: dict):
         toman_price = usd * usdt_toman
 
         toman_text = (
-            f"\n🇮🇷 قیمت تقریبی تومان: "
-            f"<b>{toman_price:,.0f}</b> تومان"
+            f"\n🇮🇷 قیمت تقریبی:\n"
+            f"<b>{toman_price:,.0f}</b> تومان\n"
         )
+
 
     change_emoji = "📈" if change >= 0 else "📉"
 
-    text = (
-        f"🪙 <b>{coin['name']} ({coin['symbol'].upper()})</b>\n\n"
-        f"💵 قیمت دلار: <b>${usd:,.2f}</b>"
-        f"{toman_text}\n"
-        f"{change_emoji} تغییر ۲۴ ساعته: "
-        f"<b>{change:.2f}%</b>"
+
+    now = datetime.now().strftime(
+        "%Y/%m/%d | %H:%M:%S"
     )
 
-    await update.message.reply_text(
-        text,
-        parse_mode=ParseMode.HTML,
+
+    text = (
+
+        f"━━━━━━━━━━━━━━\n"
+        f"🪙 <b>{coin['name']} ({coin['symbol'].upper()})</b>\n\n"
+
+        f"💵 قیمت:\n"
+        f"<b>${usd:,.2f}</b>\n"
+
+        f"{toman_text}\n"
+
+        f"{change_emoji} تغییر 24h:\n"
+        f"<b>{change:.2f}%</b>\n\n"
+
+        f"🕒 بروزرسانی:\n"
+        f"{now}\n"
+
+        f"━━━━━━━━━━━━━━\n"
+        f"⚡ Live Market"
+
     )
+
+
+    await loading.edit_text(
+    text,
+    parse_mode=ParseMode.HTML,
+    reply_markup=chart_keyboard(
+        "crypto",
+        coin["id"]
+    )
+)
+
+
+
+
 
 async def send_forex(update: Update, pair: str):
 
+    loading = await update.message.reply_text(
+        "📡 دریافت اطلاعات فارکس 🔄"
+    )
+
+
     data = get_forex_price(pair)
 
+
     if not data:
-        await update.message.reply_text(
+
+        await loading.edit_text(
             "❌ خطا در دریافت قیمت."
         )
+
         return
+
 
 
     price = data["price"]
     change = data["change"]
 
 
+
     change_emoji = "📈" if change >= 0 else "📉"
 
 
-    text = (
-        f"💱 <b>{pair}</b>\n\n"
-        f"💵 قیمت: <b>{price}</b>\n"
-        f"{change_emoji} تغییر: <b>{change:.2f}%</b>"
+
+    now = datetime.now().strftime(
+        "%Y/%m/%d | %H:%M:%S"
     )
 
 
-    await update.message.reply_text(
+    text = (
+
+        f"━━━━━━━━━━━━━━\n"
+        f"💱 <b>{pair}</b>\n\n"
+
+        f"💵 قیمت:\n"
+        f"<b>{price}</b>\n\n"
+
+        f"{change_emoji} تغییر 24h:\n"
+        f"<b>{change:.2f}%</b>\n\n"
+
+        f"🕒 بروزرسانی:\n"
+        f"{now}\n"
+
+        f"━━━━━━━━━━━━━━\n"
+        f"⚡ Forex Market"
+
+    )
+
+
+    await loading.edit_text(
         text,
         parse_mode=ParseMode.HTML,
+        reply_markup=chart_keyboard(
+            "forex",
+            pair
+        )
     )
+
+
+
+
+
 
 
 async def send_commodity(update, symbol):
 
+    loading = await update.message.reply_text(
+        "📡 دریافت اطلاعات بازار 🔄"
+    )
+
+
     code, emoji = COMMODITIES[symbol]
+
 
     data = get_commodity_price(code)
 
+
     if not data:
-        await update.message.reply_text("❌ خطا در دریافت قیمت")
+
+        await loading.edit_text(
+            "❌ خطا در دریافت قیمت."
+        )
+
         return
 
-    text = (
-        f"{emoji} <b>{symbol}</b>\n\n"
-        f"💲 قیمت: <b>{data['price']}</b>\n"
-        f"📈 تغییر: <b>{data['change']:.2f}%</b>"
+
+
+    price = data["price"]
+    change = data["change"]
+
+
+
+    
+
+
+
+    now = datetime.now().strftime(
+        "%Y/%m/%d | %H:%M:%S"
     )
 
-    await update.message.reply_text(
-        text,
-        parse_mode="HTML"
+
+
+    text = (
+
+        f"━━━━━━━━━━━━━━\n"
+        f"{emoji} <b>{symbol}</b>\n\n"
+
+        f"💵 قیمت:\n"
+        f"<b>{price}</b>\n\n"
+
+        f"🕒 بروزرسانی:\n"
+        f"{now}\n"
+
+        f"━━━━━━━━━━━━━━\n"
+        f"⚡ Commodity Market"
+
     )
+
+
+
+    await loading.edit_text(
+        text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=chart_keyboard(
+            "commodity",
+            code
+        )
+    )
+
+async def chart_callback(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    query = update.callback_query
+
+    await query.answer()
+
+
+    # فقط گروه
+    if query.message.chat.type == "private":
+        return
+
+
+    data = query.data
+
+
+    try:
+
+        # chart_crypto_bitcoin_15m
+        # chart_forex_EUR/USD_15m
+        # chart_commodity_GOLD_15m
+
+        _, market_type, symbol, timeframe = data.split("_")
+
+
+    except ValueError:
+
+        await query.message.reply_text(
+            "❌ اطلاعات چارت اشتباه است."
+        )
+
+        return
+
+
+
+    loading = await query.message.reply_text(
+        "📊 در حال ساخت چارت 🔄"
+    )
+
+
+
+    try:
+
+        file = create_chart(
+            market_type,
+            symbol,
+            timeframe
+        )
+
+
+        await loading.delete()
+
+
+        await query.message.reply_photo(
+            photo=open(
+                file,
+                "rb"
+            ),
+            caption=(
+                f"📈 چارت {symbol}\n"
+                f"⏱ تایم‌فریم: {timeframe}"
+            )
+        )
+
+
+    except Exception as e:
+
+        print(
+            "CHART ERROR:",
+            e
+        )
+
+
+        await loading.edit_text(
+            "❌ خطا در ساخت چارت."
+        )
+
+
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 

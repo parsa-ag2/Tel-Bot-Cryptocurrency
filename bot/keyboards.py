@@ -1,5 +1,5 @@
 from telegram import ReplyKeyboardMarkup
-
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 def home_keyboard():
     keyboard = [
@@ -53,4 +53,45 @@ def commodities_keyboard():
         keyboard,
         resize_keyboard=True,
         is_persistent=True,
+    )
+def chart_keyboard(
+    market_type,
+    symbol
+):
+
+    keyboard = [
+
+        [
+            InlineKeyboardButton(
+                "5 دقیقه",
+                callback_data=f"chart_{market_type}_{symbol}_5m"
+            ),
+
+            InlineKeyboardButton(
+                "15 دقیقه",
+                callback_data=f"chart_{market_type}_{symbol}_15m"
+            ),
+
+        ],
+
+        [
+            InlineKeyboardButton(
+                "30 دقیقه",
+                callback_data=f"chart_{market_type}_{symbol}_30m"
+            ),
+
+            InlineKeyboardButton(
+                "60 دقیقه",
+                callback_data=f"chart_{market_type}_{symbol}_60m"
+            ),
+
+        ]
+    ]
+
+
+    return InlineKeyboardMarkup(keyboard)
+
+
+    return InlineKeyboardMarkup(
+        keyboard
     )

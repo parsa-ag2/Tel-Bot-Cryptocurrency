@@ -1,8 +1,11 @@
 import requests
 
 from config import TWELVE_DATA_API_KEY, TWELVE_DATA_BASE_URL
+from services.cache import (
+    get_cache,
+    set_cache
+)
 
-_coin_cache = None
 
 
 # =====================
@@ -80,14 +83,10 @@ def find_market(text):
     text = text.strip().lower()
 
 
-
-
     # =====================
-    # Alias های دستی
+    # USD
     # =====================
 
-
-    # دلار
     if text in USD_ALIASES:
 
         return {
@@ -96,7 +95,11 @@ def find_market(text):
         }
 
 
-    # کالا
+
+    # =====================
+    # Commodity
+    # =====================
+
     if text in COMMODITY_ALIASES:
 
         return {
@@ -105,7 +108,11 @@ def find_market(text):
         }
 
 
-    # فارکس
+
+    # =====================
+    # Forex
+    # =====================
+
     if text in FOREX_ALIASES:
 
         return {
@@ -114,7 +121,11 @@ def find_market(text):
         }
 
 
-    # کریپتو
+
+    # =====================
+    # Crypto Alias
+    # =====================
+
     if text in CRYPTO_ALIASES:
 
         coin_id = CRYPTO_ALIASES[text]
@@ -131,8 +142,11 @@ def find_market(text):
                 }
 
 
+    # =====================
+    # بعد از اینجا سرچ عمومی
+    # =====================
 
-    # اول کریپتو
+
     coin = find_coin_by_name(text)
 
     if coin:
@@ -142,85 +156,122 @@ def find_market(text):
         }
 
 
-    # فارکس
-    pairs = get_all_forex_pairs()
-
-    query = text.upper().replace(" ", "")
-
-    if query in pairs:
-        return {
-            "type": "forex",
-            "data": query
-        }
-
-
-    # ارز کوتاه مثل EUR
-    pair = query + "/USD"
-
-    if pair in pairs:
-        return {
-            "type": "forex",
-            "data": pair
-        }
-    # دلار و تتر
-    usd_aliases = {"دلار", "دلار آمریکا", "usd", "dollar", "تتر", "تتر آمریکا", "usdt", "tether"}
-
-    if text in usd_aliases:
-        return {
-            "type": "usd",
-            "data": "USD"
-        }
-
-
-    # کالاها
-    commodities = {
-        "gold": "GOLD",
-        "طلا": "GOLD",
-        "silver": "SILVER",
-        "نقره": "SILVER",
-        "oil": "BRENT",
-        "نفت": "BRENT",
-    }
-
-
-    if text in commodities:
-        return {
-            "type": "commodity",
-            "data": commodities[text]
-        }
-
-
     return None
 
+_coin_cache = None
+
+
+
 def get_all_coins():
+
     global _coin_cache
 
-    if _coin_cache is None:
-        url = "https://api.coingecko.com/api/v3/coins/list"
-        _coin_cache = requests.get(url, timeout=10).json()
 
-    return _coin_cache
+    if _coin_cache is not None:
+        return _coin_cache
+
+
+    cache_key = "all_crypto_coins"
+
+
+    cached = get_cache(cache_key)
+
+    if cached:
+        _coin_cache = cached
+        return cached
+
+
+
+    url = "https://api.coingecko.com/api/v3/coins/list"
+
+
+    try:
+
+        response = requests.get(
+            url,
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+
+        coins = response.json()
+
+
+        _coin_cache = coins
+
+
+        set_cache(
+            cache_key,
+            coins,
+            300   # ۵ دقیقه
+        )
+
+
+        return coins
+
+
+
+    except Exception as e:
+
+        print(
+            "COINS LIST ERROR:",
+            e
+        )
+
+        return []
+
+
 
 def find_coin_by_name(name):
 
     name = name.strip().lower()
 
+
     coins = get_all_coins()
+
 
     for coin in coins:
 
         if coin["name"].lower() == name:
+
             return coin
+
 
     return None
 
 
-
 def search_coins(query):
 
-    query = query.strip()
+    query = query.strip().lower()
+
+
+    # اول alias ها
+    if query in CRYPTO_ALIASES:
+
+        coin_id = CRYPTO_ALIASES[query]
+
+        coins = get_all_coins()
+
+        for coin in coins:
+
+            if coin["id"] == coin_id:
+                return [coin]
+
+
+
+    cache_key = f"coin_search_{query}"
+
+
+    cached = get_cache(cache_key)
+
+    if cached:
+        return cached
+
+
 
     url = "https://api.coingecko.com/api/v3/search"
+
 
     try:
 
@@ -232,7 +283,9 @@ def search_coins(query):
             timeout=10
         )
 
+
         response.raise_for_status()
+
 
         coins = response.json().get(
             "coins",
@@ -240,14 +293,16 @@ def search_coins(query):
         )
 
 
+
         if not coins:
             return []
+
 
 
         query_lower = query.lower()
 
 
-        # اولویت بندی نتایج
+
         coins.sort(
             key=lambda c: (
                 c["symbol"].lower() != query_lower,
@@ -257,18 +312,20 @@ def search_coins(query):
         )
 
 
-        # اگر اسم کامل بود فقط همان ارز
-# اول نماد دقیق
-        for coin in coins:
-            if coin["symbol"].lower() == query_lower:
-                return [coin]
 
-        # بعد اسم دقیق
-        for coin in coins:
-            if coin["name"].lower() == query_lower:
-                return [coin]
+        result = coins[:5]
 
-        return coins
+
+
+        set_cache(
+            cache_key,
+            result,
+            300
+        )
+
+
+        return result
+
 
 
     except Exception as e:
@@ -284,6 +341,15 @@ def search_coins(query):
 
 def get_price(coin_id):
 
+    cache_key = f"crypto_price_{coin_id}"
+
+    # اول کش
+    cached = get_cache(cache_key)
+
+    if cached:
+        return cached
+
+
     url = (
         "https://api.coingecko.com/api/v3/simple/price"
         f"?ids={coin_id}"
@@ -291,26 +357,6 @@ def get_price(coin_id):
         "&include_24hr_change=true"
     )
 
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-
-        data = response.json()
-
-        return {
-            "usd": data[coin_id]["usd"],
-            "change": data[coin_id]["usd_24h_change"],
-        }
-
-    except Exception:
-        return None
-
-
-# ---------- تتر تومان والکس ----------
-
-def get_usdt_toman():
-
-    url = "https://api.wallex.ir/v1/markets"
 
     try:
 
@@ -324,24 +370,100 @@ def get_usdt_toman():
         data = response.json()
 
 
+        result = {
+
+            "usd": data[coin_id]["usd"],
+
+            "change": data[coin_id]["usd_24h_change"]
+
+        }
+
+
+        
+        set_cache(
+            cache_key,
+            result,
+            100
+        )
+
+
+        return result
+
+
+
+    except Exception as e:
+
+        print(
+            "CRYPTO PRICE ERROR:",
+            e
+        )
+
+        return None
+
+
+
+# ---------- تتر تومان والکس ----------
+
+def get_usdt_toman():
+
+    cache_key = "usdt_toman_price"
+
+
+    # اول کش
+    cached = get_cache(cache_key)
+
+    if cached:
+        return cached
+
+
+
+    url = "https://api.wallex.ir/v1/markets"
+
+
+    try:
+
+        response = requests.get(
+            url,
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+
+        data = response.json()
+
+
         markets = data["result"]["symbols"]
 
 
-        usdt = markets.get("USDTTMN")
+        usdt = markets.get(
+            "USDTTMN"
+        )
 
 
         if not usdt:
             return None
 
 
-        price = usdt["stats"]["lastPrice"]
+
+        price = float(
+            usdt["stats"]["lastPrice"]
+        )
 
 
-        return float(price)
+        
+        set_cache(
+            cache_key,
+            price,
+            100
+        )
+
+
+        return price
 
 
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
 
         print(
             "WALLEX ERROR:",
@@ -352,16 +474,20 @@ def get_usdt_toman():
 # ---------- فارکس Twelve Data ----------
 
 
-
 _forex_cache = None
 
 
 def get_all_forex_pairs():
 
-    global _forex_cache
+    cache_key = "forex_pairs"
 
-    if _forex_cache is not None:
-        return _forex_cache
+
+    # اول کش
+    cached = get_cache(cache_key)
+
+    if cached:
+        return cached
+
 
 
     url = f"{TWELVE_DATA_BASE_URL}/forex_pairs"
@@ -380,7 +506,9 @@ def get_all_forex_pairs():
             timeout=10
         )
 
+
         response.raise_for_status()
+
 
         data = response.json()
 
@@ -390,15 +518,25 @@ def get_all_forex_pairs():
 
         for item in data.get("data", []):
 
-            symbol = item.get("symbol")
+            symbol = item.get(
+                "symbol"
+            )
 
             if symbol:
                 pairs.append(symbol)
 
 
-        _forex_cache = pairs
+
+       
+        set_cache(
+            cache_key,
+            pairs,
+            100
+        )
+
 
         return pairs
+
 
 
     except Exception as e:
@@ -411,8 +549,17 @@ def get_all_forex_pairs():
         return []
 
 
-
 def get_forex_price(pair):
+
+    cache_key = f"forex_price_{pair}"
+
+
+    cached = get_cache(cache_key)
+
+    if cached:
+        return cached
+
+
 
     url = f"{TWELVE_DATA_BASE_URL}/quote"
 
@@ -438,25 +585,46 @@ def get_forex_price(pair):
         data = response.json()
 
 
+
         if "close" not in data:
+
             print(
                 "TWELVE ERROR:",
                 data
             )
+
             return None
 
 
 
-        return {
+        result = {
+
             "symbol": pair,
-            "price": float(data["close"]),
+
+            "price": float(
+                data["close"]
+            ),
+
             "change": float(
                 data.get(
                     "percent_change",
                     0
                 )
             )
+
         }
+
+
+
+        # کش کوتاه برای قیمت
+        set_cache(
+            cache_key,
+            result,
+            60
+        )
+
+
+        return result
 
 
 
@@ -469,55 +637,147 @@ def get_forex_price(pair):
 
         return None
     
-# ---------- شاخص ها  ----------
 
-COMMODITIES = {
-    "BRENT": "BZ=F",      # نفت برنت
-    "WTI": "CL=F",        # نفت خام آمریکا
-    "GOLD": "GC=F",       # طلا
-    "SILVER": "SI=F",     # نقره
-    "NATGAS": "NG=F",     # گاز طبیعی
-    "COPPER": "HG=F",     # مس
+
+# ---------- Commodities Twelve Data ----------
+
+
+COMMODITY_SYMBOLS = {
+
+    "GOLD": "XAU/USD",
+    "SILVER": "XAG/USD",
+    "BRENT": "BRENT",
+    "WTI": "WTI",
+    "COPPER": "COPPER",
+    "NATGAS": "NATGAS"
+
 }
+
 
 
 def get_commodity_price(symbol):
 
-    yahoo_symbol = COMMODITIES.get(symbol)
+    cache_key = f"commodity_price_{symbol}"
 
-    if not yahoo_symbol:
+
+    # اول کش
+    cached = get_cache(cache_key)
+
+    if cached:
+        return cached
+
+
+
+    pair = COMMODITY_SYMBOLS.get(symbol)
+
+
+    if not pair:
         return None
 
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{yahoo_symbol}"
+
+
+    url = f"{TWELVE_DATA_BASE_URL}/quote"
+
+
+    params = {
+
+        "symbol": pair,
+
+        "apikey": TWELVE_DATA_API_KEY
+
+    }
+
+
 
     try:
+
         response = requests.get(
+
             url,
-            headers={
-                "User-Agent": "Mozilla/5.0"
-            },
+
+            params=params,
+
             timeout=10
+
         )
 
-        print("YAHOO STATUS:", response.status_code)
 
         response.raise_for_status()
 
-        result = response.json()["chart"]["result"]
 
-        if not result:
+        data = response.json()
+
+
+
+        if "close" not in data:
+
+            print(
+
+                "COMMODITY ERROR:",
+
+                data
+
+            )
+
             return None
 
-        meta = result[0]["meta"]
 
-        return {
-            "price": meta.get("regularMarketPrice"),
-            "change": meta.get(
-                "regularMarketChangePercent",
-                0
+
+
+        result = {
+
+
+            "price": float(
+
+                data["close"]
+
+            ),
+
+
+            "change": float(
+
+                data.get(
+
+                    "percent_change",
+
+                    0
+
+                )
+
             )
+
         }
 
+
+
+        # کش ۱ دقیقه
+        set_cache(
+
+            cache_key,
+
+            result,
+
+            60
+
+        )
+
+
+
+        return result
+
+
+
+
     except Exception as e:
-        print("COMMODITY ERROR:", e)
+
+
+        print(
+
+            "COMMODITY ERROR:",
+
+            e
+
+        )
+
+
         return None

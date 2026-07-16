@@ -10,7 +10,11 @@ from telegram.ext import CallbackQueryHandler
 from bot.membership import check_membership_callback
 from config import BOT_TOKEN
 from database.db import init_db
-from bot.handlers import start, text_handler
+from bot.handlers import (
+    start,
+    text_handler,
+    chart_callback
+)
 from bot.group_handler import bot_added
 from bot.message_handler import market_message_handler
 from settings.settings_panel import settings_handlers
@@ -93,6 +97,18 @@ def main():
         )
     )
 
+
+
+    # =========================
+    # Chart Callback
+    # =========================
+
+    app.add_handler(
+        CallbackQueryHandler(
+            chart_callback,
+            pattern="^chart_"
+        )
+    )
 
     # =========================
     # Settings Panel
