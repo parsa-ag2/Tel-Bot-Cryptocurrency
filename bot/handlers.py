@@ -20,7 +20,7 @@ from bot.keyboards import (
     markets_keyboard,
     commodities_keyboard,
     chart_keyboard,
-    timeframe_keyboard
+    
 )
 
 
@@ -33,6 +33,14 @@ COMMODITIES = {
     "🟤 مس": ("COPPER", "🟤"),
     "🔴 گاز طبیعی": ("NATGAS", "🔴"),
 }
+
+def is_group(update):
+
+    return update.effective_chat.type in [
+        ChatType.GROUP,
+        ChatType.SUPERGROUP
+    ]
+
 
 async def send_price(update: Update, coin: dict):
 
@@ -102,13 +110,17 @@ async def send_price(update: Update, coin: dict):
 
 
     await loading.edit_text(
-    text,
-    parse_mode=ParseMode.HTML,
-    reply_markup=chart_keyboard(
-        "crypto",
-        coin["id"]
+        text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=(
+            chart_keyboard(
+                "crypto",
+                coin["id"]
+            )
+            if is_group(update)
+            else None
+        )
     )
-)
 
 
 
@@ -171,10 +183,14 @@ async def send_forex(update: Update, pair: str):
     await loading.edit_text(
         text,
         parse_mode=ParseMode.HTML,
-        reply_markup=chart_keyboard(
+    reply_markup=(
+        chart_keyboard(
             "forex",
             pair
         )
+        if is_group(update)
+        else None
+    )
     )
 
 
@@ -242,10 +258,14 @@ async def send_commodity(update, symbol):
     await loading.edit_text(
         text,
         parse_mode=ParseMode.HTML,
-        reply_markup=chart_keyboard(
+    reply_markup=(
+        chart_keyboard(
             "commodity",
             code
         )
+        if is_group(update)
+        else None
+    )
     )
 
 async def chart_callback(
@@ -264,25 +284,6 @@ async def chart_callback(
 
 
     data = query.data
-    # =========================
-# باز کردن منوی چارت
-# =========================
-
-    if data.startswith("chartmenu_"):
-
-        _, market_type, symbol = data.split("_")
-
-
-        await query.message.reply_text(
-            "⏱ تایم‌فریم را انتخاب کنید:",
-            reply_markup=timeframe_keyboard(
-                market_type,
-                symbol
-            )
-        )
-
-        return
-
 
     try:
 
@@ -316,6 +317,14 @@ async def chart_callback(
             symbol,
             timeframe
         )
+
+        if not file:
+
+            await loading.edit_text(
+                "❌ دیتای چارت موجود نیست."
+            )
+
+            return
 
 
         await loading.delete()
