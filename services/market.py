@@ -39,6 +39,14 @@ def find_market(text):
             "type": "forex",
             "data": pair
         }
+    # دلار و تتر
+    usd_aliases = {"دلار", "دلار آمریکا", "usd", "dollar", "تتر", "تتر آمریکا", "usdt", "tether"}
+
+    if text in usd_aliases:
+        return {
+            "type": "usd",
+            "data": "USD"
+        }
 
 
     # کالاها

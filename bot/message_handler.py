@@ -219,31 +219,49 @@ ${usd:,.2f}
 
     elif market["type"] == "commodity":
 
+            symbol = market["data"]
+            result = get_commodity_price(symbol)
 
-        symbol = market["data"]
+            if not result:
+                return
+
+            await update.message.reply_text(
+                f"""
+    📊 {symbol}
 
 
-        result = get_commodity_price(symbol)
+    💵 قیمت:
+    {result['price']}
 
 
-        if not result:
+    📈 تغییر:
+    {result['change']:.2f}%
+    """
+            )
+
+            return   # 👈 این خط رو اضافه کنید
+
+    # =========================
+    # USD / Tether
+    # =========================
+
+    elif market["type"] == "usd":
+
+        usdt_toman = get_usdt_toman()
+
+        if not usdt_toman:
             return
-
-
 
         await update.message.reply_text(
             f"""
-📊 {symbol}
+💵 دلار / تتر (قیمت لحظه‌ای بر اساس تتر والکس)
 
 
-💵 قیمت:
-{result['price']}
-
-
-📈 تغییر:
-{result['change']:.2f}%
+🇮🇷 تومان:
+{usdt_toman:,.0f} تومان
 """
         )
 
-
         return
+
+        
