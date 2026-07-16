@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType
-
+from bot.keyboards import chart_keyboard
 from services.market import (
     get_price,
     get_forex_price,
@@ -155,21 +155,24 @@ async def market_message_handler(
 
         await update.message.reply_text(
             f"""
-🪙 {coin['name']} ({coin['symbol'].upper()})
+        🪙 {coin['name']} ({coin['symbol'].upper()})
 
 
-💵 قیمت:
-${usd:,.2f}
+        💵 قیمت:
+        ${usd:,.2f}
 
 
-{toman_text}
+        {toman_text}
 
 
-📊 تغییر 24h:
-{change:.2f}%
-"""
+        📊 تغییر 24h:
+        {change:.2f}%
+        """,
+            reply_markup=chart_keyboard(
+                "crypto",
+                coin["id"]
+            )
         )
-
         return
 
 

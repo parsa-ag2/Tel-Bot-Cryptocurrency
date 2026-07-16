@@ -1,6 +1,6 @@
 import requests
 import matplotlib.pyplot as plt
-
+import uuid
 
 
 def create_chart(
@@ -107,7 +107,7 @@ def create_crypto_chart(
 
 
 
-    file = "chart.png"
+    file = f"chart_{uuid.uuid4().hex}.png"
 
 
 

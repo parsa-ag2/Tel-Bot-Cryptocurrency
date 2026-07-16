@@ -104,10 +104,10 @@ def main():
     # =========================
 
     app.add_handler(
-        CallbackQueryHandler(
-            chart_callback,
-            pattern="^chart_"
-        )
+    CallbackQueryHandler(
+        chart_callback,
+        pattern="^(chart_|chartmenu_)"
+    )
     )
 
     # =========================

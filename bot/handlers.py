@@ -19,7 +19,8 @@ from bot.keyboards import (
     home_keyboard,
     markets_keyboard,
     commodities_keyboard,
-    chart_keyboard
+    chart_keyboard,
+    timeframe_keyboard
 )
 
 
@@ -263,6 +264,24 @@ async def chart_callback(
 
 
     data = query.data
+    # =========================
+# باز کردن منوی چارت
+# =========================
+
+    if data.startswith("chartmenu_"):
+
+        _, market_type, symbol = data.split("_")
+
+
+        await query.message.reply_text(
+            "⏱ تایم‌فریم را انتخاب کنید:",
+            reply_markup=timeframe_keyboard(
+                market_type,
+                symbol
+            )
+        )
+
+        return
 
 
     try:
