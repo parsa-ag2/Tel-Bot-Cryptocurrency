@@ -1,6 +1,8 @@
+from datetime import datetime
+
 from telegram import Update
 from telegram.ext import ContextTypes
-from telegram.constants import ChatType
+from telegram.constants import ChatType, ParseMode
 from bot.keyboards import chart_keyboard
 from services.market import (
     get_price,
@@ -13,6 +15,13 @@ from services.market import (
 )
 
 
+def now_text():
+
+    return datetime.now().strftime(
+        "%Y/%m/%d | %H:%M:%S"
+    )
+
+
 async def market_message_handler(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
@@ -22,28 +31,21 @@ async def market_message_handler(
     if update.effective_chat.type == ChatType.PRIVATE:
         return
 
-
     if not update.message or not update.message.text:
         return
 
-
     text = update.message.text.lower().strip()
-
 
     # جلوگیری از سرچ های الکی
     if len(text) < 2:
         return
 
-
-
     # =========================
-    # اول فارکس
+    # اول فارکس / کالا / دلار
     # =========================
 
     market = find_market(text)
 
-
-    # اگر فارکس یا کالا بود مستقیم برو
     if market:
 
         pass
@@ -51,7 +53,7 @@ async def market_message_handler(
     else:
 
         # =========================
-        # بعد کریپتو
+        # بعد کریپتو - بدون لیست، مستقیم بهترین نتیجه
         # =========================
 
         coin = find_coin_by_name(text)
@@ -67,53 +69,21 @@ async def market_message_handler(
 
             coins = search_coins(text)
 
+            if coins:
 
-            if len(coins) > 1:
-
-                message = "🔍 چند ارز پیدا شد:\n\n"
-
-                for i, coin in enumerate(coins[:10], start=1):
-
-                    message += (
-                        f"{i}️⃣ {coin['name']} "
-                        f"({coin['symbol'].upper()})\n"
-                    )
-
-
-                message += "\nلطفاً نام کامل ارز را وارد کنید."
-
-
-                await update.message.reply_text(
-                    message
-                )
-
-                return
-
-
-            elif len(coins) == 1:
-
+                # به‌جای نمایش لیست، مستقیم بهترین نتیجه رو برمی‌گردونیم
                 market = {
                     "type": "crypto",
                     "data": coins[0]
                 }
 
-
             else:
 
                 market = None
-   
-    # =========================
-    # Forex / Commodity
-    # =========================
-
-
-
 
     # چیزی پیدا نشد
     if not market:
         return
-
-
 
     # =========================
     # Crypto
@@ -121,62 +91,57 @@ async def market_message_handler(
 
     if market["type"] == "crypto":
 
-
         coin = market["data"]
-
 
         result = get_price(
             coin["id"]
         )
 
-
         if not result:
             return
-
 
         usd = result["usd"]
         change = result["change"]
 
+        change_emoji = "📈" if change >= 0 else "📉"
 
         toman_text = ""
 
-
         usdt_toman = get_usdt_toman()
-
 
         if usdt_toman:
 
+            toman_price = usd * usdt_toman
+
             toman_text = (
-                f"\n🇮🇷 تومان تقریبی:\n"
-                f"{usd * usdt_toman:,.0f} تومان"
+                f"\n🇮🇷 قیمت تقریبی:\n"
+                f"<b>{toman_price:,.0f}</b> تومان\n"
             )
 
-
+        text_reply = (
+            f"━━━━━━━━━━━━━━\n"
+            f"🪙 <b>{coin['name']} ({coin['symbol'].upper()})</b>\n\n"
+            f"💵 قیمت:\n"
+            f"<b>${usd:,.2f}</b>\n"
+            f"{toman_text}\n"
+            f"{change_emoji} تغییر 24h:\n"
+            f"<b>{change:.2f}%</b>\n\n"
+            f"🕒 بروزرسانی:\n"
+            f"{now_text()}\n"
+            f"━━━━━━━━━━━━━━\n"
+            f"⚡ Live Market"
+        )
 
         await update.message.reply_text(
-            f"""
-        🪙 {coin['name']} ({coin['symbol'].upper()})
-
-
-        💵 قیمت:
-        ${usd:,.2f}
-
-
-        {toman_text}
-
-
-        📊 تغییر 24h:
-        {change:.2f}%
-        """,
+            text_reply,
+            parse_mode=ParseMode.HTML,
             reply_markup=chart_keyboard(
                 "crypto",
                 coin["id"]
             )
         )
+
         return
-
-
-
 
     # =========================
     # Forex
@@ -184,37 +149,41 @@ async def market_message_handler(
 
     elif market["type"] == "forex":
 
-
         pair = market["data"]
 
-
         result = get_forex_price(pair)
-
 
         if not result:
             return
 
+        price = result["price"]
+        change = result["change"]
 
+        change_emoji = "📈" if change >= 0 else "📉"
 
-        await update.message.reply_text(
-            f"""
-💱 {pair}
-
-
-💵 قیمت:
-{result['price']}
-
-
-📈 تغییر:
-{result['change']:.2f}%
-"""
+        text_reply = (
+            f"━━━━━━━━━━━━━━\n"
+            f"💱 <b>{pair}</b>\n\n"
+            f"💵 قیمت:\n"
+            f"<b>{price}</b>\n\n"
+            f"{change_emoji} تغییر 24h:\n"
+            f"<b>{change:.2f}%</b>\n\n"
+            f"🕒 بروزرسانی:\n"
+            f"{now_text()}\n"
+            f"━━━━━━━━━━━━━━\n"
+            f"⚡ Forex Market"
         )
 
+        await update.message.reply_text(
+            text_reply,
+            parse_mode=ParseMode.HTML,
+            reply_markup=chart_keyboard(
+                "forex",
+                pair
+            )
+        )
 
         return
-
-
-
 
     # =========================
     # Commodity
@@ -222,27 +191,41 @@ async def market_message_handler(
 
     elif market["type"] == "commodity":
 
-            symbol = market["data"]
-            result = get_commodity_price(symbol)
+        symbol = market["data"]
 
-            if not result:
-                return
+        result = get_commodity_price(symbol)
 
-            await update.message.reply_text(
-                f"""
-    📊 {symbol}
+        if not result:
+            return
 
+        price = result["price"]
+        change = result["change"]
 
-    💵 قیمت:
-    {result['price']}
+        change_emoji = "📈" if change >= 0 else "📉"
 
+        text_reply = (
+            f"━━━━━━━━━━━━━━\n"
+            f"📊 <b>{symbol}</b>\n\n"
+            f"💵 قیمت:\n"
+            f"<b>{price}</b>\n\n"
+            f"{change_emoji} تغییر 24h:\n"
+            f"<b>{change:.2f}%</b>\n\n"
+            f"🕒 بروزرسانی:\n"
+            f"{now_text()}\n"
+            f"━━━━━━━━━━━━━━\n"
+            f"⚡ Commodity Market"
+        )
 
-    📈 تغییر:
-    {result['change']:.2f}%
-    """
+        await update.message.reply_text(
+            text_reply,
+            parse_mode=ParseMode.HTML,
+            reply_markup=chart_keyboard(
+                "commodity",
+                symbol
             )
+        )
 
-            return   
+        return
 
     # =========================
     # USD / Tether
@@ -255,16 +238,20 @@ async def market_message_handler(
         if not usdt_toman:
             return
 
-        await update.message.reply_text(
-            f"""
-        💵 دلار / تتر (USDT)
-
-        🇮🇷 قیمت تقریبی:
-        {usdt_toman:,.0f} تومان
-        """
+        text_reply = (
+            f"━━━━━━━━━━━━━━\n"
+            f"💵 <b>دلار / تتر (USDT)</b>\n\n"
+            f"🇮🇷 قیمت تقریبی:\n"
+            f"<b>{usdt_toman:,.0f}</b> تومان\n\n"
+            f"🕒 بروزرسانی:\n"
+            f"{now_text()}\n"
+            f"━━━━━━━━━━━━━━\n"
+            f"⚡ Live Market"
         )
-        
+
+        await update.message.reply_text(
+            text_reply,
+            parse_mode=ParseMode.HTML,
+        )
 
         return
-
-        
