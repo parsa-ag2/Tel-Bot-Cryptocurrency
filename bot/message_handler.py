@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from zoneinfo import ZoneInfo
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ChatType, ParseMode
@@ -17,7 +17,11 @@ from services.market import (
 
 def now_text():
 
-    return datetime.now().strftime(
+    iran_time = datetime.now(
+        ZoneInfo("Asia/Tehran")
+    )
+
+    return iran_time.strftime(
         "%Y/%m/%d | %H:%M:%S"
     )
 
