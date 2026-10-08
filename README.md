@@ -141,6 +141,10 @@ The project uses MySQL to store bot-related data such as:
 - Required channels
 - Bot settings
 
+## Usage Note
+
+Use Persian or English asset names in Telegram to request supported market prices.
+
 ## License
 
 This project is provided for educational and development purposes.
