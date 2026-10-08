@@ -38,6 +38,8 @@ cd Tel-Bot-Cryptocurrency
 
 ### 2. Install requirements
 
+Install the required Python packages from `requirements.txt`:
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -61,7 +63,13 @@ DB_PASSWORD=your_mysql_password
 OWNER_ID=your_telegram_id
 ```
 
+Replace the values with your own credentials and configuration.
+
 ### 4. Set up MySQL
+
+Create a MySQL database for the bot.
+
+Example:
 
 ```sql
 CREATE DATABASE telegram_bot;
